@@ -73,4 +73,16 @@ ranking with the IDs above:
 - The two **No-TDD** runs took the top and 3rd spots, both multi-module solutions with the deepest test suites (75–107 tests) and the most defensive parse-stage validation.
 - The two **TDD** runs landed 4th and last — smallest implementations (142–207 LOC), fewest tests (25–29), and both graded 6–6.5 overall. Rigorous red/green discipline didn't translate into more thorough coverage of edge cases here; each cycle covered only the one behavior needed to pass the next test, so nothing beyond the tests the agent thought to write ever got exercised.
 - The two **test-first** runs split — TF2 tied for 2nd (largest test-first suite, 90 tests, `Decimal` throughout) while TF1 landed 5th (had the strongest parser of the three single-file solutions, but shipped visible dead scaffolding and a broken TOTAL row).
-- This is a small sample (2 runs per condition), so treat the TDD-loses-on-quality result as suggestive rather than conclusive — but it's a clear reversal of the intuition that stricter test discipline yields more robust code, and is consistent with the TDD runs' evaluator scores (0.88–0.92) reflecting task *completion* more than code *quality*.
+- This is a small sample (2 runs per condition), so treat the TDD-loses-on-quality result as suggestive rather than conclusive — but it's a clear reversal of the intuition that stricter test discipline yields more robust code.
+- Note: the per-session scores in the [Results files](#results-files) reports (0.75–0.92) are **process-adherence** checks — each verifies against its own per-scenario rubric that the assigned process was actually followed (strict TDD really looped red→green, test-first really wrote tests first). They are not a quality or completion metric and are not comparable across conditions; their only role here is to confirm this is a genuine process difference, not just a prompting difference. See [process_quality_correlation.md](process_quality_correlation.md) for the process→quality analysis.
+
+
+## Comparison approach
+- Task that was used: [`task.md`](task.md)
+- Same six-solution set as the ranking above (2× no-TDD, 2× strict TDD, 2× test-first), with no mentions of process in the solutions themselves so it could be judged on results alone
+- Prompted Opus to compare the results: [`compare.md`](compare.md); used six independent reviewer subagents (design, code quality, test effectiveness) plus a full test-suite run per solution
+
+## Comparison results
+- Comparison results: [`comparison_report.md`](comparison_report.md)
+- Process → quality correlation analysis, cross-referencing the blind quality ranking against each session's actual process (mined only after ranking, to avoid bias): [`process_quality_correlation.md`](process_quality_correlation.md)
+- As in the original `tdd-analysis-01-medium` comparison, the no-TDD runs ranked highest; here test-first split across the ranking while strict TDD again landed at the bottom, reinforcing the earlier result now that TDD adherence itself was verified more rigorously
