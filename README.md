@@ -25,27 +25,36 @@ I then had those compared and judged by Opus.
 
 flowchart LR
 
-TDD["1\. Create TDD instructions"]
-TDD --> TDDEv["2\. Eval that TDD instructions work"]
+TDD{{"TDD instructions"}}
 
-Task["3\. Create task specs<br/>(small / medium / large)"]
+Task{{"Task specs<br/>(small / medium / large)"}}
 
-TDDEv --> Task
+Task --> R1["1\. Run with TDD"]
+TDD --> R1
+R1 --> RCheck1["Check that TDD instructions were followed"]
 
-Task --> R1["4\. Run with TDD"]
-Task --> R2["4\. Run with TDD"]
-Task --> R3["4\. Run without TDD"]
-Task --> R4["4\. Run without TDD"]  
+Task --> R2["1\. Run with TDD"]
+TDD --> R2
+R2 --> RCheck2["Check that TDD instructions were followed"]
 
-R1 --> S1["Solution 1<br/>+ session trace"]
-R2 --> S2["Solution 2<br/>+ session trace"]
-R3 --> S3["Solution 3<br/>+ session trace"]
-R4 --> S4["Solution 4<br/>+ session trace"]
+Task --> R3["1\. Run without TDD"]
+Task --> R4["1\. Run without TDD"]  
 
-S1 & S2 & S3 & S4 --> Rank["5\. Opus: judgment of the 4 solutions<br/>(no knowledge of which used TDD)"]
+R1 --> S1{{"Solution 1"}}
+R2 --> S2{{"Solution 2"}}
+R3 --> S3{{"Solution 3"}}
+R4 --> S4{{"Solution 4"}}
 
-Rank --> Hyp["6\. Opus: given the session traces,<br/>hypothesize relationships between judgment and workflow"]
 
+
+S1 & S2 & S3 & S4 --> Rank["2\. Opus: judgment of the 4 solutions<br/>(no knowledge of which used TDD)"]
+
+Rank --> Hyp["3\. Opus: Hypothesize relationships between judgment and workflow"]
+
+ST1{{Session traces 1}} --> Hyp
+ST2{{Session traces 2}} --> Hyp
+ST3{{Session traces 3}} --> Hyp
+ST4{{Session traces 4}} --> Hyp
 
 ```
 
