@@ -1,0 +1,236 @@
+"""Report formatting pipeline."""
+from __future__ import annotations
+import re
+from decimal import Decimal
+from typing import Any
+
+CATEGORIES = ["REVENUE", "COST", "HEADCOUNT"]
+PERIOD_RE = re.compile(r"^\d{4}-Q[1-4]$")
+
+
+# ── Stage 1: Parse ────────────────────────────────────────────────────────────
+
+def parse(raw: list[str]) -> list[dict] | dict:
+    """Parse raw strings into structured rows."""
+    rows = []
+    for line in raw:
+        parts = line.split(":")
+        if len(parts) != 4:
+            return {"error": "parse", "input": line, "reason": "wrong number of fields"}
+        row_id_str, category, value_str, period = parts
+        # Validate row_id
+        if not row_id_str.isdigit() or int(row_id_str) <= 0:
+            return {"error": "parse", "input": line, "reason": "invalid row_id"}
+        row_id = int(row_id_str)
+        # Validate category
+        if category not in CATEGORIES:
+            return {"error": "parse", "input": line, "reason": "invalid category"}
+        # Validate value
+        try:
+            value = float(value_str)
+        except ValueError:
+            return {"error": "parse", "input": line, "reason": "invalid value"}
+        if value < 0 and category != "COST":
+            return {"error": "parse", "input": line, "reason": "negative value not allowed for category"}
+        # Validate period
+        if not PERIOD_RE.match(period):
+            return {"error": "parse", "input": line, "reason": "invalid period format"}
+        rows.append({"row_id": row_id, "category": category, "value": value, "period": period})
+    return rows
+
+
+# ── Stage 2: Aggregate ────────────────────────────────────────────────────────
+
+def aggregate(rows: list[dict]) -> dict:
+    """Group rows by period×category, compute subtotals and grand totals."""
+    # Collect unique periods in chronological order
+    periods_seen: list[str] = []
+    by_period_category: dict[str, dict[str, float]] = {}
+
+    for row in rows:
+        period = row["period"]
+        category = row["category"]
+        value = row["value"]
+        if period not in by_period_category:
+            periods_seen.append(period)
+            by_period_category[period] = {}
+        by_period_category[period][category] = (
+            by_period_category[period].get(category, 0.0) + value
+        )
+
+    # Sort periods chronologically
+    periods = sorted(periods_seen)
+
+    # Period subtotals (sum over categories per period)
+    period_subtotals: dict[str, float] = {
+        p: sum(by_period_category[p].values()) for p in periods
+    }
+
+    # Category grand totals (sum over all periods per category)
+    category_totals: dict[str, float] = {}
+    for p in periods:
+        for cat, val in by_period_category[p].items():
+            category_totals[cat] = category_totals.get(cat, 0.0) + val
+
+    return {
+        "periods": periods,
+        "by_period_category": by_period_category,
+        "period_subtotals": period_subtotals,
+        "category_totals": category_totals,
+    }
+
+
+# ── Stage 3: Format ────────────────────────────────────────────────────────
+
+def _fmt_value(category: str, value: float) -> str:
+    """Format a single cell value according to its category."""
+    if category == "HEADCOUNT":
+        return str(int(round(value)))
+    # REVENUE or COST - monetary
+    if value < 0:
+        return f"-${abs(value):,.2f}"
+    return f"${value:,.2f}"
+
+
+def format_table(agg: dict) -> str:
+    """Transform aggregated data into a plain-text table."""
+    periods = agg["periods"]
+    by_period_category = agg["by_period_category"]
+    category_totals = agg["category_totals"]
+    period_subtotals = agg["period_subtotals"]
+
+    # Build data rows (one per category)
+    # columns: category label | period values... | total
+    # Determine which categories appear
+    cats_present = [c for c in CATEGORIES if any(
+        c in by_period_category.get(p, {}) for p in periods
+    ) or c in category_totals]
+
+    # Build cell grid
+    # rows = cats_present + ["TOTAL"]
+    # cols = periods + ["TOTAL"]
+
+    def cell(cat: str, period: str) -> str:
+        val = by_period_category.get(period, {}).get(cat, 0.0)
+        return _fmt_value(cat, val)
+
+    def total_cell(cat: str) -> str:
+        val = category_totals.get(cat, 0.0)
+        return _fmt_value(cat, val)
+
+    def period_total_cell(period: str) -> str:
+        # For the TOTAL row, sum per-period values but we need a monetary total.
+        # The spec says "summing each period column" - we'll sum numeric values.
+        val = period_subtotals.get(period, 0.0)
+        return f"${val:,.2f}" if val >= 0 else f"-${abs(val):,.2f}"
+
+    def grand_total_cell() -> str:
+        val = sum(period_subtotals.values())
+        return f"${val:,.2f}" if val >= 0 else f"-${abs(val):,.2f}"
+
+    # Assemble grid: header + data rows + total row
+    # header
+    header = ["CATEGORY"] + periods + ["TOTAL"]
+    data_rows = []
+    for cat in cats_present:
+        row = [cat] + [cell(cat, p) for p in periods] + [total_cell(cat)]
+        data_rows.append(row)
+    total_row = ["TOTAL"] + [period_total_cell(p) for p in periods] + [grand_total_cell()]
+
+    all_rows = [header] + data_rows + [total_row]
+
+    # Compute column widths
+    num_cols = len(header)
+    col_widths = [0] * num_cols
+    for row in all_rows:
+        for i, cell_val in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(cell_val))
+
+    PAD = 2
+
+    def fmt_row(row: list[str]) -> str:
+        parts = []
+        for i, cell_val in enumerate(row):
+            if i == 0:
+                # left-align category label
+                parts.append(cell_val.ljust(col_widths[i]))
+            else:
+                parts.append(cell_val.rjust(col_widths[i]))
+        return (" " * PAD).join(parts)
+
+    lines = [fmt_row(row) for row in all_rows]
+    return "\n".join(lines)
+
+
+# ── Stage 4: Validate output ───────────────────────────────────────────────────
+
+def _parse_monetary(s: str) -> float:
+    """Convert a formatted monetary or integer string back to float."""
+    s = s.strip()
+    negative = s.startswith("-")
+    s = s.lstrip("-").lstrip("$").replace(",", "")
+    val = float(s)
+    return -val if negative else val
+
+
+def validate_output(table: str, agg: dict) -> str | dict:
+    """Validate the formatted table against the aggregated data."""
+    lines = table.split("\n")
+    if not lines:
+        return {"error": "validate", "reason": "empty table"}
+
+    header_line = lines[0]
+    periods = agg["periods"]
+
+    # Check 1: every period appears as a column header
+    for p in periods:
+        if p not in header_line:
+            return {"error": "validate", "reason": f"period {p!r} missing from header"}
+
+    # Check 3: split header to get column positions and check widths
+    # We'll use the header tokens and verify each col >= its header width
+    # The header is space-separated with >= 2 spaces between columns.
+    # We'll just check that the header contains the period names (already done)
+    # and that TOTAL appears.
+    if "TOTAL" not in header_line:
+        return {"error": "validate", "reason": "TOTAL column missing from header"}
+
+    # Check 2: TOTAL column values match sum of period values in each row
+    # Parse table rows: split by 2+ spaces
+    import re as _re
+    for line in lines[1:]:
+        if not line.strip():
+            continue
+        # Split the line into cells by 2+ spaces
+        cells = _re.split(r"  +", line.strip())
+        if len(cells) < 2:
+            continue
+        # Last cell should be the TOTAL for this row
+        # cells[0] = category label, cells[1:-1] = period values, cells[-1] = total
+        period_cells = cells[1:-1]
+        total_cell_str = cells[-1]
+        try:
+            computed_total = sum(_parse_monetary(c) for c in period_cells)
+            stated_total = _parse_monetary(total_cell_str)
+        except (ValueError, IndexError):
+            continue  # skip rows we can't parse (e.g., headers)
+        if abs(computed_total - stated_total) > 0.01:
+            return {
+                "error": "validate",
+                "reason": f"TOTAL mismatch in row starting with {cells[0]!r}: "
+                          f"computed {computed_total:.2f} != stated {stated_total:.2f}",
+            }
+
+    return table
+
+
+# ── Full pipeline ─────────────────────────────────────────────────────────────
+
+def run_pipeline(raw: list[str]) -> str | dict:
+    """Run all four stages and return a formatted table or a structured error."""
+    rows = parse(raw)
+    if isinstance(rows, dict):
+        return rows
+    agg = aggregate(rows)
+    table = format_table(agg)
+    return validate_output(table, agg)

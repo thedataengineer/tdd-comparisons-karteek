@@ -1,0 +1,2 @@
+[tool.mutmut]
+source_paths = ["loyalty"]

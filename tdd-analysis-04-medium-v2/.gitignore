@@ -1,0 +1,7 @@
+.pytest_cache
+.coverage
+__pycache__
+.venv
+mutants
+mutmut-stats.json
+.mutmut-cache
