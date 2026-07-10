@@ -4,12 +4,12 @@ Summary of the latest JSON result files for `tdd-small` and `tdd-small-no` scena
 
 ## Results files
 
-| ID | TDD used? | JSON File | Report | Scenario | Codebase |
-|----|-----------|-----------|--------|----------|----------|
-| T1 | Yes | tdd-small_2026-07-09_09-42-14.json | solution-summary-1783590349381.md | tdd-small | sol-2026-07-09_11-42-10 |
-| T2 | Yes | tdd-small_2026-07-09_08-47-41.json | tdd-analysis-1783587098546.md | tdd-small | sol-2026-07-09_10-47-37 |
-| NT1 | No | tdd-small-no_2026-07-09_09-55-46.json | tdd-analysis-1783591048584.md | tdd-small-no | sol-2026-07-09_11-55-41 |
-| NT2 | No | tdd-small-no_2026-07-09_10-00-00.json | eval-report-1783591302009.md | tdd-small-no | sol-2026-07-09_11-59-54 |
+| ID | TDD used? | Full session | Solution summary | Scenario | Codebase | TDD judgment |
+|----|-----------|-----------|--------|----------|----------|----------------|
+| T1 | Yes | [tdd-small_2026-07-09_09-42-14.json](tdd-small_2026-07-09_09-42-14.json) | [solution-summary-1783590349381.md](sol-2026-07-09_11-42-10/solution-summary-1783590349381.md) | tdd-small | [sol-2026-07-09_11-42-10](sol-2026-07-09_11-42-10/) | [did-it-do-tdd.md](sol-2026-07-09_11-42-10/did-it-do-tdd.md) |
+| T2 | Yes | [tdd-small_2026-07-09_08-47-41.json](tdd-small_2026-07-09_08-47-41.json) | [tdd-analysis-1783587098546.md](sol-2026-07-09_10-47-37/tdd-analysis-1783587098546.md) | tdd-small | [sol-2026-07-09_10-47-37](sol-2026-07-09_10-47-37/) | [did-it-do-tdd.md](sol-2026-07-09_10-47-37/did-it-do-tdd.md) |
+| NT1 | No | [tdd-small-no_2026-07-09_09-55-46.json](tdd-small-no_2026-07-09_09-55-46.json) | [tdd-analysis-1783591048584.md](sol-2026-07-09_11-55-41/tdd-analysis-1783591048584.md) | tdd-small-no | [sol-2026-07-09_11-55-41](sol-2026-07-09_11-55-41/) | — |
+| NT2 | No | [tdd-small-no_2026-07-09_10-00-00.json](tdd-small-no_2026-07-09_10-00-00.json) | [eval-report-1783591302009.md](sol-2026-07-09_11-59-54/eval-report-1783591302009.md) | tdd-small-no | [sol-2026-07-09_11-59-54](sol-2026-07-09_11-59-54/) | — |
 
 ## Run Stats
 
@@ -51,7 +51,7 @@ Ran `mutmut` against each codebase's `slot_validator` package, isolated in a per
 
 ## Comparison approach
 - Task that was used: [`task.md`](task.md)
-- When copying the previous analysis reports, I removed all mentions of TDD to try and hide from the comparison that it was created in different workflows, to let it focus purely on the results
+- I made sure there were no  mentions of TDD to try and hide from the comparison that it was created in different workflows, to let it focus purely on the results
 - Prompt to compare the results: [`compare.md`](compare.md); Used Opus, asked to send off subagents for each first
 
 ## Comparison results

@@ -4,12 +4,12 @@ Summary of the latest JSON result files for `tdd-medium-v2` and `tdd-medium-no` 
 
 ## Results files
 
-| ID | TDD used? | JSON File | Report | Scenario | Codebase |
-|----|-----------|-----------|--------|----------|----------|
-| T1 | Yes | tdd-medium-v2_2026-07-10_08-17-47.json | tdd-analysis-1783673009287.md | tdd-medium-v2 | sol-2026-07-10_10-17-42 |
-| T2 | Yes | tdd-medium-v2_2026-07-10_09-23-44.json | medium-v2_2026-07-10_09-23-44-supplementary.md (orig. tdd-medium-v2_2026-07-10_09-23-44-supplementary.md) | tdd-medium-v2 | sol-2026-07-10_11-23-40 |
-| NT1 | No | tdd-medium-no_2026-07-08_11-57-32.json | analysis-1783512340492.md (orig. tdd-analysis-1783512340492.md) | tdd-medium-no | sol-2026-07-08_12-57-29 |
-| NT2 | No | tdd-medium-no_2026-07-08_12-28-23.json | solution-summary-1783514194167.md | tdd-medium-no | sol-2026-07-08_13-28-18 |
+| ID | TDD used? | Full session | Solution summary | Scenario | Codebase | TDD judgment |
+|----|-----------|-----------|--------|----------|----------|----------------|
+| T1 | Yes | [tdd-medium-v2_2026-07-10_08-17-47.json](tdd-medium-v2_2026-07-10_08-17-47.json) | [analysis-1783673009287.md](sol-2026-07-10_10-17-42/analysis-1783673009287.md) | tdd-medium-v2 | [sol-2026-07-10_10-17-42](sol-2026-07-10_10-17-42/) | [did-it-do-tdd.md](sol-2026-07-10_10-17-42/did-it-do-tdd.md) |
+| T2 | Yes | [tdd-medium-v2_2026-07-10_09-23-44.json](tdd-medium-v2_2026-07-10_09-23-44.json) | [medium-v2_2026-07-10_09-23-44-supplementary.md](sol-2026-07-10_11-23-40/medium-v2_2026-07-10_09-23-44-supplementary.md) | tdd-medium-v2 | [sol-2026-07-10_11-23-40](sol-2026-07-10_11-23-40/) | [did-it-do-tdd.md](sol-2026-07-10_11-23-40/did-it-do-tdd.md) |
+| NT1 | No | [tdd-medium-no_2026-07-08_11-57-32.json](tdd-medium-no_2026-07-08_11-57-32.json) | [analysis-1783512340492.md](sol-2026-07-08_12-57-29/analysis-1783512340492.md) | tdd-medium-no | [sol-2026-07-08_12-57-29](sol-2026-07-08_12-57-29/) | — |
+| NT2 | No | [tdd-medium-no_2026-07-08_12-28-23.json](tdd-medium-no_2026-07-08_12-28-23.json) | [solution-summary-1783514194167.md](sol-2026-07-08_13-28-18/solution-summary-1783514194167.md) | tdd-medium-no | [sol-2026-07-08_13-28-18](sol-2026-07-08_13-28-18/) | — |
 
 **NT1 and NT2 are the same codebases as used in tdd-analysis-01-medium. T1 and T2 were freshly created with an expanded TDD instruction prompt, based on Opus's recommendations after analysing previous TDD sessions and why their design might have been deemed worse. It's in [`instructions.ts`](../instructions.ts) under `with_tdd_improved`**
 
@@ -66,7 +66,7 @@ This mutation-score ranking exactly matches the LLM-judged quality ranking above
 
 ## Comparison approach
 - Task that was used: [`task.md`](task.md)
-- When copying the previous analysis reports, I removed all mentions of TDD to try and hide from the comparison that it was created in different workflows, to let it focus purely on the results
+- I made sure there were no  mentions of TDD to try and hide from the comparison that it was created in different workflows, to let it focus purely on the results
 - Prompt to compare the results: [`compare.md`](compare.md); Used Opus, asked to send off subagents for each first
 
 ## Comparison results

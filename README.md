@@ -31,11 +31,11 @@ Task{{"Task specs<br/>(small / medium / large)"}}
 
 Task --> R1["1\. Run with TDD"]
 TDD --> R1
-R1 --> RCheck1["Check that TDD instructions were followed"]
+R1 --> RCheck1["Check that TDD instructions were followed (enough)"]
 
 Task --> R2["1\. Run with TDD"]
 TDD --> R2
-R2 --> RCheck2["Check that TDD instructions were followed"]
+R2 --> RCheck2["Check that TDD instructions were followed (enough)"]
 
 Task --> R3["1\. Run without TDD"]
 Task --> R4["1\. Run without TDD"]  

@@ -2,12 +2,12 @@
 
 2 runs with TDD, 2 runs without; both were created with Sonnet-4.6
 
-| ID | TDD | Conversation JSON | Analysis from the run | Codebase |
-|---|---|---|---|---|
-| T1 | Yes | `tdd-medium_2026-07-08_12-18-32.json` | `sol-2026-07-08_13-18-28/tdd-analysis-1783513418045.md` | `sol-2026-07-08_13-18-28/` |
-| T2 | Yes | `tdd-medium_2026-07-08_12-44-34.json` | `sol-2026-07-08_13-41-45/tdd-analysis-1783515149930.md` | `sol-2026-07-08_13-41-45/` |
-| NT1 | No | `tdd-medium-no_2026-07-08_12-28-23.json` | `sol-2026-07-08_13-28-18/solution-summary-1783514194167.md` | `sol-2026-07-08_13-28-18/` |
-| NT2 | No | `tdd-medium-no_2026-07-08_11-57-32.json` | `sol-2026-07-08_12-57-29/tdd-analysis-1783512340492.md` | `sol-2026-07-08_12-57-29/` |
+| ID | TDD | Full session | Solution summary | Codebase | TDD judgment |
+|---|---|---|---|---|---|
+| T1 | Yes | [`tdd-medium_2026-07-08_12-18-32.json`](tdd-medium_2026-07-08_12-18-32.json) | [`sol-2026-07-08_13-18-28/tdd-analysis-1783513418045.md`](sol-2026-07-08_13-18-28/tdd-analysis-1783513418045.md) | [`sol-2026-07-08_13-18-28/`](sol-2026-07-08_13-18-28/) | [`did-it-do-tdd.md`](sol-2026-07-08_13-18-28/did-it-do-tdd.md) |
+| T2 | Yes | [`tdd-medium_2026-07-08_12-44-34.json`](tdd-medium_2026-07-08_12-44-34.json) | [`sol-2026-07-08_13-41-45/analysis-1783515149930.md`](sol-2026-07-08_13-41-45/analysis-1783515149930.md) | [`sol-2026-07-08_13-41-45/`](sol-2026-07-08_13-41-45/) | [`did-it-do-tdd.md`](sol-2026-07-08_13-41-45/did-it-do-tdd.md) |
+| NT1 | No | [`tdd-medium-no_2026-07-08_12-28-23.json`](tdd-medium-no_2026-07-08_12-28-23.json) | [`sol-2026-07-08_13-28-18/solution-summary-1783514194167.md`](sol-2026-07-08_13-28-18/solution-summary-1783514194167.md) | [`sol-2026-07-08_13-28-18/`](sol-2026-07-08_13-28-18/) | — |
+| NT2 | No | [`tdd-medium-no_2026-07-08_11-57-32.json`](tdd-medium-no_2026-07-08_11-57-32.json) | [`sol-2026-07-08_12-57-29/analysis-1783512340492.md`](sol-2026-07-08_12-57-29/analysis-1783512340492.md) | [`sol-2026-07-08_12-57-29/`](sol-2026-07-08_12-57-29/) | — |
 
 ## Run Stats
 
@@ -42,7 +42,7 @@ Ran [`mutmut`](https://mutmut.readthedocs.io/) (v3.6.0) against each codebase's 
 
 ## Comparison approach
 - Task that was used: [`task.md`](task.md)
-- When copying the previous analysis reports, I removed all mentions of TDD to try and hide from the comparison that it was created in different workflows, to let it focus purely on the results
+- I made sure there were no  mentions of TDD to try and hide from the comparison that it was created in different workflows, to let it focus purely on the results
 - Prompt to compare the results: [`compare.md`](compare.md); Used Opus, asked to send off subagents for each first
 
 ## Comparison results

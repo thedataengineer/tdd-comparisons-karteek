@@ -4,12 +4,12 @@ Summary of the latest JSON result files for `tdd-large` and `tdd-large-no` scena
 
 ## Results files
 
-| ID | TDD used? | JSON File | Report | Scenario | Codebase |
-|----|-----------|-----------|--------|----------|----------|
-| T1 | Yes | tdd-large_2026-07-09_12-59-47.json | eval-report-1783602274197.md | tdd-large | sol-2026-07-09_14-59-45 |
-| T2 | Yes | tdd-large_2026-07-09_13-12-58.json | analysis-1783603068879.md (orig. tdd-analysis-1783603068879.md) | tdd-large | sol-2026-07-09_15-12-54 |
-| NT1 | No | tdd-large-no_2026-07-09_13-23-35.json | solution-summary-1783603613843.md | tdd-large-no | sol-2026-07-09_15-23-32 |
-| NT2 | No | tdd-large-no_2026-07-09_13-44-44.json | analysis-1783604937652.md (orig. tdd-analysis-1783604937652.md) | tdd-large-no | sol-2026-07-09_15-43-12 |
+| ID | TDD used? | Full session | Solution summary | Scenario | Codebase | TDD judgment |
+|----|-----------|-----------|--------|----------|----------|----------------|
+| T1 | Yes | [tdd-large_2026-07-09_12-59-47.json](tdd-large_2026-07-09_12-59-47.json) | [eval-report-1783602274197.md](sol-2026-07-09_14-59-45/eval-report-1783602274197.md) | tdd-large | [sol-2026-07-09_14-59-45](sol-2026-07-09_14-59-45/) | [did-it-do-tdd.md](sol-2026-07-09_14-59-45/did-it-do-tdd.md) |
+| T2 | Yes | [tdd-large_2026-07-09_13-12-58.json](tdd-large_2026-07-09_13-12-58.json) | [analysis-1783603068879.md](sol-2026-07-09_15-12-54/analysis-1783603068879.md) | tdd-large | [sol-2026-07-09_15-12-54](sol-2026-07-09_15-12-54/) | [did-it-do-tdd.md](sol-2026-07-09_15-12-54/did-it-do-tdd.md) |
+| NT1 | No | [tdd-large-no_2026-07-09_13-23-35.json](tdd-large-no_2026-07-09_13-23-35.json) | [solution-summary-1783603613843.md](sol-2026-07-09_15-23-32/solution-summary-1783603613843.md) | tdd-large-no | [sol-2026-07-09_15-23-32](sol-2026-07-09_15-23-32/) | — |
+| NT2 | No | [tdd-large-no_2026-07-09_13-44-44.json](tdd-large-no_2026-07-09_13-44-44.json) | [analysis-1783604937652.md](sol-2026-07-09_15-43-12/analysis-1783604937652.md) | tdd-large-no | [sol-2026-07-09_15-43-12](sol-2026-07-09_15-43-12/) | — |
 
 Notes:
 - JSON files live in `results/`; `codebasePath` in each JSON points at `tdd-2026-07-09_HH-MM-SS`, which was copied into this folder as `sol-2026-07-09_HH-MM-SS`.
@@ -68,7 +68,7 @@ Ran `mutmut` against each codebase's package, isolated in a per-project `.venv`.
 
 ## Comparison approach
 - Task that was used: [`task.md`](task.md)
-- When copying the previous analysis reports, I removed all mentions of TDD to try and hide from the comparison that it was created in different workflows, to let it focus purely on the results
+- I made sure there were no  mentions of TDD to try and hide from the comparison that it was created in different workflows, to let it focus purely on the results
 - Prompt to compare the results: [`compare.md`](compare.md); Used Opus, asked to send off subagents for each first
 
 ## Comparison results
