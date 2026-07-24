@@ -59,3 +59,12 @@ Ran `mutmut` against each codebase's `slot_validator` package, isolated in a per
 - Results interestingly ranked the two non-TDD runs first. Gave Opus access to the original conversations, and asked it to analyse if there is any correlation to the TDD approach, results: [`workflow-quality-correlation.md`](workflow-quality-correlation.md)
 
 NB: Comparison discussion overall with Opus cost ~$5
+
+## Summary
+
+| Rank | ID | TDD | Design | Code | Tests | Avg | Test Count | Coverage | Mutation Score | Total Tokens | Turns | Tool Calls | Verdict |
+|------|----|-----|--------|------|-------|-----|------------|----------|----------------|--------------|-------|------------|---------|
+| 🥇 1 | NT1 | No | 8 | 9 | 9 | 8.67 | 61 | 100% | 89.6% | 122,108 | 10 | 15 | Best overall — dataclass result, no bugs, 61 reason-asserting tests |
+| 🥈 2 | NT2 | No | 8 | 8 | 8 | 8.0 | 58 | 100% | 92.3% | 117,522 | 10 | 20 | Very close — dataclass result, but a Unicode-digit spec deviation |
+| 🥉 3 | T1 | Yes | 7 | 8 | 7 | 7.33 | 21 | 100% | 93.6% | 894,451 | 55 | 37 | Correct & clean, but dict result + fewer tests + dead code |
+| 4 | T2 | Yes | 6 | 7 | 7 | 6.67 | 20 | 100% | 93.2% | 1,142,039 | 68 | 26 | Weakest design (free-text error) + a genuine crash bug |

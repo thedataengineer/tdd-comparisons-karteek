@@ -72,3 +72,12 @@ This mutation-score ranking exactly matches the LLM-judged quality ranking above
 ## Comparison results
 - Comparison results: [`COMPARISON-REPORT.md`](COMPARISON-REPORT.md)
 - Gave Opus access to the original conversations, pointed out that the TDD prompt in this run had been augmented with more focus on refactoring step and thinking about the overall contracts in the design first. Asked it to analyse the outcomes of T1 and T2 based on that background, results: [`TDD-PROMPT-ANALYSIS.md`](TDD-PROMPT-ANALYSIS.md)
+
+## Summary
+
+| Rank | ID | TDD | Design | Code | Tests | Avg | Test Count | Coverage | Mutation Score | Total Tokens | Turns | Tool Calls | Headline weakness |
+|------|----|-----|--------|------|-------|-----|------------|----------|----------------|--------------|-------|------------|-------------------|
+| 🥇 1 | T1 | Yes | 8 | 8 | 7 | 7.67 | 51 | 100% | 90.2% | 3,447,283 | 117 | 116 | HEADCOUNT-only TOTAL row printed as `$`; validation is a substring check, not arithmetic |
+| 🥈 2 | NT1 | No | 8 | 8 | 6 | 7.33 | 107 | 100% | 89.6% | 703,159 | 21 | 20 | Fractional HEADCOUNT → spurious ValidationError on valid input; tests lean on monkeypatching |
+| 🥉 3 | NT2 | No | 8 | 7 | 6 | 7.0 | 75 | 100% | 84.2% | 769,814 | 31 | 30 | `NaN`/`Infinity` crash the pipeline instead of a ParseError; validation re-runs the formatter |
+| 4 | T2 | Yes | 7 | 7 | 6 | 6.67 | 43 | 100% | 81.1% | 1,421,671 | 61 | 60 | Validation is tautological (checks aggregate against itself); width check is only a comment |

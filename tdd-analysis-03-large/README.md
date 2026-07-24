@@ -15,6 +15,15 @@ Notes:
 - JSON files live in `results/`; `codebasePath` in each JSON points at `tdd-2026-07-09_HH-MM-SS`, which was copied into this folder as `sol-2026-07-09_HH-MM-SS`.
 - `evaluation.reports` in each JSON points at the report file under `results/`; that same file has been copied alongside its codebase here (T2/NT2 reports were renamed, dropping the `tdd-` prefix, to avoid revealing which run used TDD).
 
+## Summary
+
+| Rank | ID | TDD | Design | Code | Tests | Correctness | Avg | Test Count | Coverage | Mutation Score | Total Tokens | Turns | Tool Calls | Verdict |
+|------|----|-----|--------|------|-------|-------------|-----|------------|----------|----------------|--------------|-------|------------|---------|
+| 1 | NT2 | No | 8 | 9 | 8 | 8 | 8.25 | 69 | 100% | 86.9% | 322,148 | 14 | 13 | Only solution with real input validation; precise boundary tests; minor out-of-order purchase edge cases only |
+| 2 | T2 | Yes | 7 | 7 | 8 | 8 | 7.5 | 22 | 99% | 85.6% | 1,225,517 | 63 | 62 | Clean typed data model, all core rules correct; no error handling, duplicate purchase ID bug, dead state fields |
+| 3 | T1 | Yes | 7 | 7 | 7 | 9 | 7.5 | 21 | 99% | 85.2% | 1,253,300 | 67 | 66 | Most functionally correct (no bugs found on probing); untyped nested dicts, vestigial structure, fewest tests |
+| 4 | NT1 | No | 8 | 7 | 6 | 6 | 6.75 | 74 | 99% | 89.4% | 185,094 | 11 | 9 | Highest design score, 74 tests — but two High bugs: wrong batch draw-down order; future-dated points counted as spendable |
+
 ## Run Stats
 
 (Turns = number of assistant messages; Tool Calls = number of `toolCall` blocks across those messages)

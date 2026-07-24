@@ -86,3 +86,14 @@ ranking with the IDs above:
 - Comparison results: [`comparison_report.md`](comparison_report.md)
 - Process → quality correlation analysis, cross-referencing the blind quality ranking against each session's actual process (mined only after ranking, to avoid bias): [`process_quality_correlation.md`](process_quality_correlation.md)
 - As in the original `tdd-analysis-01-medium` comparison, the no-TDD runs ranked highest; here test-first split across the ranking while strict TDD again landed at the bottom, reinforcing the earlier result now that TDD adherence itself was verified more rigorously
+
+## Summary
+
+| Rank | ID | Approach | Design | Code | Tests | Avg | Test Count | Coverage | Impl/Test LOC | Total Tokens | Turns | Tool Calls | Verdict |
+|------|----|----------|--------|------|-------|-----|------------|----------|---------------|--------------|-------|------------|---------|
+| 🥇 1 | NT1 | No TDD | 8 | 8 | 8 | 8.0 | 107 | 100% | 497 / 881 | 703,159 | 21 | 20 | Deepest suite, cleanest validation reusing formatter's layout; HEADCOUNT mixed into dollar totals unguarded by tests |
+| 🥈 2 | TF2 | Test-first | 8 | 8 | 7 | 8.0 | 90 | 92% | 484 / 850 | 619,531 | 27 | 26 | `Decimal` throughout, strong parse/validate; check 3 is unreachable dead code, validate module cluttered |
+| 🥉 3 | NT2 | No TDD | 8 | 8 | 7 | 7.5 | 75 | 100% | 330 / 430 | 769,814 | 31 | 30 | Clean design, `Decimal`, correct parse; thinner tests, one no-op test, validation self-referential |
+| 4 | T2 | TDD | 7 | 7 | 6 | 6.5 | 29 | 98% | 207 / 304 | 2,099,280 | 96 | 95 | Clean happy path, correct formatting; crashes on malformed input instead of returning structured parse errors |
+| 5 | TF1 | Test-first | 6 | 6 | 6 | 6.0 | 62 | 99% | 348 / 360 | 268,323 | 17 | 16 | Strongest parser of the single-file solutions; broken TOTAL row (headcount as dollars), dead scaffolding shipped |
+| 6 | T1 | TDD | 6 | 6 | 6 | 6.0 | 25 | 100% | 142 / 228 | 2,017,739 | 90 | 89 | Most compact (142 LOC); crashes on malformed input, most tautological validation, thinnest test suite |

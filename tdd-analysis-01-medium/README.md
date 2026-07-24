@@ -50,3 +50,12 @@ Ran [`mutmut`](https://mutmut.readthedocs.io/) (v3.6.0) against each codebase's 
 - Results interestingly ranked the two non-TDD runs first. Gave Opus access to the original conversations, and asked it to analyse if there is any correlation to the TDD approach, results: [`tdd-correlation.md`](tdd-correlation.md)
 
 NB: Comparison discussion overall with Opus cost ~$5
+
+## Summary
+
+| Rank | ID | TDD | Design | Code | Tests | Avg | Test Count | Coverage | Mutation Score | Total Tokens | Turns | Tool Calls | Verdict |
+|------|----|-----|--------|------|-------|-----|------------|----------|----------------|--------------|-------|------------|---------|
+| 🥇 1 | NT1 | No | — | — | — | — | 75 | 100% | 84.2% | 769,814 | 31 | 37 | Module-per-stage, dataclasses, `Decimal`; no correctness bugs, strongest error handling, only solution checking duplicate ROW_IDs; validation self-referential but harmless |
+| 🥈 2 | NT2 | No | — | — | — | — | 107 | 100% | 89.6% | 703,159 | 21 | 24 | Module-per-stage, dataclasses, float/round; best-engineered and largest suite, but validator rejects its own valid fractional output (false-rejection bug); TOTAL row never validated |
+| 🥉 3 | T1 | Yes | — | — | — | — | 30 | 100% | 81.0% | 1,519,762 | 71 | 28 | Single module, dicts, float; correct core stages but validation is circular (re-runs formatter); accepts `nan`/`inf`, ignores duplicate ROW_IDs |
+| 4 | T2 | Yes | — | — | — | — | 34 | 99% | 77.3% | 2,580,897 | 103 | 60 | Single module, dicts, float; active TOTAL-row bug (headcount summed into dollars) enshrined by a test; missing validation check #3 entirely |
