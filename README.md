@@ -1,6 +1,6 @@
 # Comparing solutions created with and without TDD
 
-Companion repository to an upcoming write-up.
+Companion repository to this post: [TDD inside the agent loop - theater or actual value?](https://martinfowler.com/articles/exploring-gen-ai/tdd-in-the-agent-loop.html)
 
 Code that created the solutions in these results is [here](https://github.com/birgitta410/local-coding-evals/tree/tdd).
 
