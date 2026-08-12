@@ -109,7 +109,7 @@ Expected: import failure for missing module.
 
 - [ ] **Step 3: Implement normal-approximation power calculation**
 
-Use `statistics.NormalDist.inv_cdf`. Round upward after applying design effect and attrition. Reject non-positive effects, invalid probabilities, and attrition at or above one.
+Use `statistics.NormalDist.inv_cdf`. Round upward after applying design effect and attrition. Reject non-positive effects, invalid probabilities, and attrition at or above one. `required_runs` returns the total analyzed runs required per condition arm of a matched comparison — not per task-condition cell; Task 15 converts to per-cell repetitions by dividing across tasks.
 
 - [ ] **Step 4: Add example pre-registration**
 
@@ -285,6 +285,8 @@ git commit -m "feat: generate balanced run schedules"
 **Interfaces:**
 
 - Produces: `shared_token_ceiling(pilot_runs: list[PilotRun], provider_limit: int) -> int`
+- Produces: `shared_timeout(pilot_runs: list[PilotRun], runtime_cap_seconds: int) -> int`
+- Produces: `budget_decision(pilot_runs: list[PilotRun], provider_limit: int, runtime_cap_seconds: int) -> BudgetDecision`
 - Produces: `censoring_report(runs: list[RunRecord]) -> CensoringReport`
 
 - [ ] **Step 1: Write failing protocol tests**
@@ -301,6 +303,18 @@ def test_protocol_review_triggers_above_ten_percent():
 def test_ceiling_rejects_fewer_than_twelve_pilot_runs_per_condition():
     with pytest.raises(ContractError, match="12 pilot runs"):
         shared_token_ceiling(THIN_PILOT_RUNS, provider_limit=200_000)
+
+def test_shared_timeout_uses_largest_condition_max_plus_margin_and_cap():
+    assert shared_timeout(PILOT_RUNS, runtime_cap_seconds=7_200) == 3_600  # max 3_000s * 1.20
+    assert shared_timeout(PILOT_RUNS, runtime_cap_seconds=3_000) == 3_000  # capped
+
+def test_budget_decision_serializes_all_inputs_and_outputs():
+    decision = budget_decision(PILOT_RUNS, provider_limit=200_000, runtime_cap_seconds=7_200)
+    assert decision.token_ceiling == 120_000
+    assert decision.timeout_seconds == 3_600
+    assert decision.samples_per_condition == {"1": 12, "2": 12, "3": 12, "4": 12, "5": 12, "6a": 12, "6b": 12, "6c": 12}
+    assert decision.provider_limit == 200_000
+    assert decision.runtime_cap_seconds == 7_200
 ```
 
 - [ ] **Step 2: Verify red**
@@ -311,7 +325,7 @@ Expected: missing-module failure.
 
 - [ ] **Step 3: Implement max-plus-margin estimator, cap, and condition report**
 
-Pilot inputs must carry `excluded_from_analysis=true`. Ceiling cannot vary by condition. Censored statuses are `token_exhausted` and `timed_out`. Estimator is the pre-registered rule: largest condition-level observed maximum plus 20 percent, capped by provider limit. Do not use nearest-rank p95 — with feasible pilot sizes (rank `ceil(0.95 × n)` selects the maximum for any `n < 20`) it silently degenerates to the maximum while claiming percentile behavior; name the maximum explicitly instead. Require at least 12 pilot runs per condition so the maximum rests on more than a handful of observations, and record per-condition sample counts in the ceiling output.
+Pilot inputs must carry `excluded_from_analysis=true`. Ceiling cannot vary by condition. Censored statuses are `token_exhausted` and `timed_out`. Estimator is the pre-registered rule: largest condition-level observed maximum plus 20 percent, capped by provider limit. Do not use nearest-rank p95 — with feasible pilot sizes (rank `ceil(0.95 × n)` selects the maximum for any `n < 20`) it silently degenerates to the maximum while claiming percentile behavior; name the maximum explicitly instead. `shared_timeout` applies the same rule to wall-clock seconds with the runtime cap; both share the 12-runs-per-condition floor. `budget_decision` composes both and serializes ceiling, timeout, per-condition sample counts, provider limit, and runtime cap for `study/pilot/budget-decision.json`. Require at least 12 pilot runs per condition so the maximum rests on more than a handful of observations.
 
 - [ ] **Step 4: Run tests and commit**
 
@@ -812,7 +826,14 @@ Two reviewers compare three variants within each condition against obligation an
 
 Run: `python3.12 -m tdd_ablation.cli validate --study study`
 
-Store executable inputs and outputs. Final count equals larger of protocol minimum and calculated requirement, rounded up to the next multiple of three so repetitions divide evenly across prompt variants (the schedule builder rejects non-divisible counts). Record both the raw calculated count and the allocated (rounded) per-cell repetition count in `study/power-analysis.json`; the `schedule` CLI command reads the allocated count and passes it as the `repetitions` argument.
+Store executable inputs and outputs. `required_runs` returns total analyzed runs per condition arm; convert to per-cell repetitions before scheduling:
+
+```
+per_cell = ceil(required_per_condition / task_count)   # task_count = 12
+allocated_per_cell = max(protocol_minimum, round_up_to_multiple(per_cell, 3))
+```
+
+The multiple-of-three rounding keeps repetitions evenly divisible across prompt variants (the schedule builder rejects non-divisible counts). Record `required_per_condition`, `per_cell`, and `allocated_per_cell` in `study/power-analysis.json`; the `schedule` CLI command reads `allocated_per_cell` and passes it as the `repetitions` argument.
 
 - [ ] **Step 4: Freeze hashes and commit**
 
@@ -846,7 +867,7 @@ Capture full metadata and failures. Do not reuse pilot solutions in screening.
 
 - [ ] **Step 3: Calculate shared ceiling**
 
-Use largest condition-level observed token maximum plus 20 percent, capped by provider limit. Set shared timeout from same non-differential rule. Document provider limit, any cap, and per-condition sample counts.
+The `budget` CLI command calls `budget_decision`, which applies the maximum-plus-20-percent rule to tokens (`shared_token_ceiling`, provider-capped) and wall-clock seconds (`shared_timeout`, runtime-capped) and serializes ceiling, timeout, per-condition sample counts, provider limit, and runtime cap into `budget-decision.json`.
 
 - [ ] **Step 4: Freeze pilot decision**
 
@@ -894,7 +915,7 @@ Keep condition labels inaccessible to reviewers. Audit container settings and ta
 
 - [ ] **Step 5: Stop on protocol breach**
 
-Pause study if censoring exceeds 10 percent in any condition, model version changes, hashes drift, evaluator collection fails, or duplicate artifact appears. Record deviation before resuming.
+Pause study if censoring exceeds 10 percent in any condition, model version changes, hashes drift, evaluator collection fails, or an unattested duplicate artifact appears. Attested duplicates (Task 7) are flagged, valid observations and do not pause the study. Record deviation before resuming.
 
 - [ ] **Step 6: Analyze screening without changing frozen criteria**
 
