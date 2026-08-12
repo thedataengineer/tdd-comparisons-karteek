@@ -943,7 +943,7 @@ Use same family balance, difficulty review, hidden-evaluator process, severity c
 
 - [ ] **Step 2: Generate paired confirmation schedule**
 
-Require at least 144 runs per condition, four repetitions per prompt variant, or larger power-derived count.
+Require at least 144 runs per condition and at least four repetitions per prompt variant, raised to the power-derived count when larger, with equal allocation across variants.
 
 - [ ] **Step 3: Execute, evaluate, mutate, and review**
 
@@ -972,7 +972,7 @@ Require identical tree hashes. Publish deviations, null findings, failed hypothe
 - [ ] Imported artifact mutation causes store verification failure.
 - [ ] Eight conditions and 24 prompt variants validate.
 - [ ] Screening schedule row count matches frozen power analysis (minimum 576) with balanced cells and variants.
-- [ ] Confirmation schedule matches frozen power analysis (minimum 12 repetitions per task-condition cell, four per prompt variant).
+- [ ] Confirmation schedule matches frozen power analysis (minimum 12 repetitions per task-condition cell, at least four per prompt variant, equal variant allocation).
 - [ ] Primary analysis retains censored runs and all generated mutants.
 - [ ] Duplicate artifact imports without attestation fail; attested duplicates carry `duplicate_of` and reviewer evidence.
 - [ ] Low severity agreement or design-review agreement blocks study progression.
