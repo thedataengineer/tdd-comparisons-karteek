@@ -290,9 +290,9 @@ git commit -m "feat: generate balanced run schedules"
 - [ ] **Step 1: Write failing protocol tests**
 
 ```python
-def test_shared_ceiling_uses_largest_condition_p95_plus_margin():
+def test_shared_ceiling_uses_largest_condition_max_plus_margin():
     ceiling = shared_token_ceiling(PILOT_RUNS, provider_limit=200_000)
-    assert ceiling == 120_000
+    assert ceiling == 120_000  # largest condition max 100_000 * 1.20
 
 def test_protocol_review_triggers_above_ten_percent():
     report = censoring_report(make_runs(total=20, censored=3, condition="5"))
@@ -309,9 +309,9 @@ Run: `python3.12 -m pytest tests/test_budget.py -q`
 
 Expected: missing-module failure.
 
-- [ ] **Step 3: Implement nearest-rank percentile, margin, cap, and condition report**
+- [ ] **Step 3: Implement max-plus-margin estimator, cap, and condition report**
 
-Pilot inputs must carry `excluded_from_analysis=true`. Ceiling cannot vary by condition. Censored statuses are `token_exhausted` and `timed_out`. Require at least 12 pilot runs per condition — nearest-rank p95 over fewer samples degenerates to the maximum and produces an unstable ceiling. Record per-condition sample counts in the ceiling output.
+Pilot inputs must carry `excluded_from_analysis=true`. Ceiling cannot vary by condition. Censored statuses are `token_exhausted` and `timed_out`. Estimator is the pre-registered rule: largest condition-level observed maximum plus 20 percent, capped by provider limit. Do not use nearest-rank p95 — with feasible pilot sizes (rank `ceil(0.95 × n)` selects the maximum for any `n < 20`) it silently degenerates to the maximum while claiming percentile behavior; name the maximum explicitly instead. Require at least 12 pilot runs per condition so the maximum rests on more than a handful of observations, and record per-condition sample counts in the ceiling output.
 
 - [ ] **Step 4: Run tests and commit**
 
@@ -502,11 +502,22 @@ git commit -m "feat: pin mutation protocol and scoring"
 - [ ] **Step 1: Write failing blinding and threshold tests**
 
 ```python
-def test_review_packet_excludes_condition_and_trace(tmp_path):
+REVIEW_MANIFEST_ALLOWLIST = {"packet_id", "task_id", "artifact_files", "rubric_version", "language", "entry_point"}
+
+def test_review_manifest_contains_only_allowlisted_keys(tmp_path):
     packet = prepare_blind_review(RUN, tmp_path)
     manifest = json.loads(packet.manifest_path.read_text())
-    assert collect_keys(manifest).isdisjoint({"condition_id", "variant_id", "prompt_text", "conversation_log"})
-    assert not any(packet.artifact_path.rglob("conversation*"))
+    assert set(collect_keys(manifest)) <= REVIEW_MANIFEST_ALLOWLIST
+
+def test_packet_id_is_neutral_alias_not_run_id(tmp_path):
+    packet = prepare_blind_review(RUN, tmp_path)
+    assert RUN.run_id not in packet.manifest_path.read_text()
+    assert RUN.run_id not in str(packet.artifact_path)
+
+def test_packet_copies_only_solution_files(tmp_path):
+    packet = prepare_blind_review(RUN_WITH_TRACE_FILES, tmp_path)
+    copied = {p.name for p in packet.artifact_path.rglob("*") if p.is_file()}
+    assert copied == set(RUN_WITH_TRACE_FILES.solution_files)
 
 def test_low_reliability_requires_full_rescore():
     with pytest.raises(ContractError, match="full independent rescoring"):
@@ -521,7 +532,7 @@ Expected: missing-module failure.
 
 - [ ] **Step 3: Implement blind packet creation and agreement checks**
 
-Two-reviewer panels use weighted Cohen's kappa. Larger panels use Krippendorff's alpha. Require `0.70`; preserve original scores, recalibration version, rescored values, and adjudication.
+Build the review manifest from an explicit allowlist — never by deleting known-bad keys from the run manifest; any metadata not on the allowlist (condition, process, variant, trace, mode, or anything added later) must be absent by construction. Assign each packet a neutral alias derived from a keyed hash of the run ID (key stored outside packets, so aliases stay deterministic for reproducibility yet reveal nothing); the run ID never appears in packet content or paths, and the alias-to-run mapping lives outside the packet in an access-controlled file. Copy only files listed in the task's public solution layout into a directory named by the alias, neutralizing any source directory names. Two-reviewer panels use weighted Cohen's kappa. Larger panels use Krippendorff's alpha. Require `0.70`; preserve original scores, recalibration version, rescored values, and adjudication.
 
 - [ ] **Step 4: Run tests and commit**
 
@@ -542,7 +553,7 @@ git commit -m "feat: enforce blind review reliability"
 
 - Produces: `paired_effect(rows: list[AnalysisRow], baseline: str, treatment: str, seed: int) -> EffectEstimate`
 - Produces: `prompt_interaction(rows: list[AnalysisRow]) -> InteractionResult`
-- Produces: `confirmation_decision(effect: EffectEstimate, defects: RiskRatioEstimate, economics: EffectEstimate, censoring: CensoringReport, interaction: InteractionResult, completed_runs: int, required_runs: int) -> Decision`
+- Produces: `confirmation_decision(effect: EffectEstimate, defects: RiskRatioEstimate, economics: EffectEstimate, censoring: CensoringReport, interaction: InteractionResult, analyzed_runs: int, required_runs: int) -> Decision`
 
 - [ ] **Step 1: Write failing decision tests**
 
@@ -554,7 +565,17 @@ def test_confirmation_requires_all_seven_criteria():
         economics=EffectEstimate(point=100, low=10, high=190),
         censoring=ACCEPTABLE_CENSORING,
         interaction=NO_BLOCKING_INTERACTION,
-        completed_runs=144,
+        analyzed_runs=144,
+        required_runs=144,
+    )
+    assert decision.adopt is True
+
+def test_censored_runs_count_toward_sample_gate():
+    decision = confirmation_decision(
+        effect=STRONG_EFFECT, defects=SAFE_DEFECTS, economics=POSITIVE_ECONOMICS,
+        censoring=CensoringReport(total=144, censored=10, requires_protocol_review=False),
+        interaction=NO_BLOCKING_INTERACTION,
+        analyzed_runs=144,  # includes the 10 censored runs scored zero under intention-to-treat
         required_runs=144,
     )
     assert decision.adopt is True
@@ -563,7 +584,7 @@ def test_blocking_prompt_interaction_forces_rejection():
     decision = confirmation_decision(
         effect=STRONG_EFFECT, defects=SAFE_DEFECTS, economics=POSITIVE_ECONOMICS,
         censoring=ACCEPTABLE_CENSORING, interaction=BLOCKING_INTERACTION,
-        completed_runs=144, required_runs=144,
+        analyzed_runs=144, required_runs=144,
     )
     assert decision.adopt is False
     assert "prompt interaction" in decision.reasons[0]
@@ -572,7 +593,7 @@ def test_underpowered_sample_forces_rejection():
     decision = confirmation_decision(
         effect=STRONG_EFFECT, defects=SAFE_DEFECTS, economics=POSITIVE_ECONOMICS,
         censoring=ACCEPTABLE_CENSORING, interaction=NO_BLOCKING_INTERACTION,
-        completed_runs=120, required_runs=144,
+        analyzed_runs=120, required_runs=144,
     )
     assert decision.adopt is False
 
@@ -592,7 +613,7 @@ Resample tasks, then paired repetitions within task, using supplied seed. Report
 
 - [ ] **Step 4: Implement confirmation rule**
 
-Require effect interval above zero, point estimate at least `0.05`, severe-defect risk-ratio upper bound below `1.10`, positive economic lower bound, acceptable censoring, acceptable prompt interaction, and pre-registered sample size.
+Require effect interval above zero, point estimate at least `0.05`, severe-defect risk-ratio upper bound below `1.10`, positive economic lower bound, acceptable censoring, acceptable prompt interaction, and pre-registered sample size. The sample gate counts analyzed runs — every assigned, imported run, including censored runs scored zero under intention-to-treat — never completed runs only; otherwise a single timeout below the 10 percent censoring threshold would contradictorily fail the gate. Track completed-run counts separately for the secondary complete-case estimate.
 
 - [ ] **Step 5: Run tests and commit**
 
@@ -791,7 +812,7 @@ Two reviewers compare three variants within each condition against obligation an
 
 Run: `python3.12 -m tdd_ablation.cli validate --study study`
 
-Store executable inputs and outputs. Final count equals larger of protocol minimum and calculated requirement. Record the resulting per-cell repetition count in `study/power-analysis.json`; the `schedule` CLI command reads it and passes it as the `repetitions` argument.
+Store executable inputs and outputs. Final count equals larger of protocol minimum and calculated requirement, rounded up to the next multiple of three so repetitions divide evenly across prompt variants (the schedule builder rejects non-divisible counts). Record both the raw calculated count and the allocated (rounded) per-cell repetition count in `study/power-analysis.json`; the `schedule` CLI command reads the allocated count and passes it as the `repetitions` argument.
 
 - [ ] **Step 4: Freeze hashes and commit**
 
@@ -825,7 +846,7 @@ Capture full metadata and failures. Do not reuse pilot solutions in screening.
 
 - [ ] **Step 3: Calculate shared ceiling**
 
-Use largest condition-level token p95 plus 20 percent, capped by provider limit. Set shared timeout from same non-differential rule. Document provider limit and any cap.
+Use largest condition-level observed token maximum plus 20 percent, capped by provider limit. Set shared timeout from same non-differential rule. Document provider limit, any cap, and per-condition sample counts.
 
 - [ ] **Step 4: Freeze pilot decision**
 
