@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Compare conditions `1`, `2`, `3`, `4`, `5`, `6a`, `6b`, and `6c`.
-- Use 12 screening tasks, six repetitions per task-condition cell, and three prompt variants.
+- Use 12 screening tasks, three prompt variants, and at least six repetitions per task-condition cell (protocol minimum; final count comes from the frozen power analysis).
 - Use one shared token ceiling established by excluded pilot runs.
 - Treat timeouts and budget exhaustion as incomplete outcomes in primary intention-to-treat analysis.
 - Keep hidden evaluators outside agent-visible workspaces.
@@ -59,7 +59,7 @@ Expected: collection fails because `tdd_ablation.contracts` does not exist.
 
 - [ ] **Step 3: Add package metadata and minimal contract functions**
 
-`pyproject.toml` must pin Python `==3.12.*`, expose `tdd-ablation = "tdd_ablation.cli:main"`, and define dev dependencies listed in Tech Stack.
+`pyproject.toml` must pin Python `==3.12.*`, expose `tdd-ablation = "tdd_ablation.cli:main"`, define dev dependencies listed in Tech Stack, and register the `container` pytest marker so the gated smoke test emits no unknown-marker warnings.
 
 - [ ] **Step 4: Run focused tests**
 
@@ -232,17 +232,26 @@ git commit -m "feat: validate tasks and severity calibration"
 
 **Interfaces:**
 
-- Produces: `build_screening_schedule(task_ids: list[str], seed: int) -> list[ScheduleRow]`
-- Produces: `build_confirmation_schedule(task_ids: list[str], condition_pairs: list[tuple[str, str]], seed: int) -> list[ScheduleRow]`
+- Produces: `build_screening_schedule(task_ids: list[str], seed: int, repetitions: int = 6) -> list[ScheduleRow]`
+- Produces: `build_confirmation_schedule(task_ids: list[str], condition_pairs: list[tuple[str, str]], seed: int, repetitions: int = 12) -> list[ScheduleRow]`
 - Produces: `write_schedule(rows, path: Path) -> None`
 
 - [ ] **Step 1: Write failing balance and determinism tests**
 
 ```python
-def test_screening_schedule_has_576_balanced_rows():
+def test_screening_schedule_default_repetitions_yield_576_balanced_rows():
     rows = build_screening_schedule([f"task-{i:02d}" for i in range(1, 13)], seed=17)
     assert len(rows) == 576
     assert set(Counter((r.task_id, r.condition_id, r.variant_id) for r in rows).values()) == {2}
+
+def test_repetitions_scale_row_count_and_stay_balanced():
+    rows = build_screening_schedule(TASKS, seed=17, repetitions=9)
+    assert len(rows) == 864
+    assert set(Counter((r.task_id, r.condition_id, r.variant_id) for r in rows).values()) == {3}
+
+def test_repetitions_not_divisible_by_variants_are_rejected():
+    with pytest.raises(ContractError, match="repetitions"):
+        build_screening_schedule(TASKS, seed=17, repetitions=7)
 
 def test_same_seed_produces_same_order():
     assert build_screening_schedule(TASKS, 17) == build_screening_schedule(TASKS, 17)
@@ -256,7 +265,7 @@ Expected: missing-module failure.
 
 - [ ] **Step 3: Implement balanced randomized schedule**
 
-Use local `random.Random(seed)`. Assign immutable run ID, phase, order, task, condition, baseline condition when applicable, variant, repetition, and seed. Confirmation creates 12 repetitions per task-condition cell with four per prompt variant.
+Use local `random.Random(seed)`. Assign immutable run ID, phase, order, task, condition, baseline condition when applicable, variant, repetition, and seed. Repetitions must divide evenly across the three prompt variants; reject counts that do not. Defaults (6 screening, 12 confirmation) are protocol minimums — the CLI passes the final power-derived repetition count from Task 15, which may be larger.
 
 - [ ] **Step 4: Run tests and commit**
 
@@ -288,6 +297,10 @@ def test_shared_ceiling_uses_largest_condition_p95_plus_margin():
 def test_protocol_review_triggers_above_ten_percent():
     report = censoring_report(make_runs(total=20, censored=3, condition="5"))
     assert report.requires_protocol_review is True
+
+def test_ceiling_rejects_fewer_than_twelve_pilot_runs_per_condition():
+    with pytest.raises(ContractError, match="12 pilot runs"):
+        shared_token_ceiling(THIN_PILOT_RUNS, provider_limit=200_000)
 ```
 
 - [ ] **Step 2: Verify red**
@@ -298,7 +311,7 @@ Expected: missing-module failure.
 
 - [ ] **Step 3: Implement nearest-rank percentile, margin, cap, and condition report**
 
-Pilot inputs must carry `excluded_from_analysis=true`. Ceiling cannot vary by condition. Censored statuses are `token_exhausted` and `timed_out`.
+Pilot inputs must carry `excluded_from_analysis=true`. Ceiling cannot vary by condition. Censored statuses are `token_exhausted` and `timed_out`. Require at least 12 pilot runs per condition — nearest-rank p95 over fewer samples degenerates to the maximum and produces an unstable ceiling. Record per-condition sample counts in the ceiling output.
 
 - [ ] **Step 4: Run tests and commit**
 
@@ -319,16 +332,22 @@ git commit -m "feat: enforce shared budget protocol"
 **Interfaces:**
 
 - Produces: `hash_tree(root: Path) -> str`
-- Produces: `import_run(schedule_row: ScheduleRow, source: Path, metadata: dict[str, object], store: Path) -> RunRecord`
+- Produces: `import_run(schedule_row: ScheduleRow, source: Path, metadata: dict[str, object], store: Path, duplicate_attestation: DuplicateAttestation | None = None) -> RunRecord`
 - Produces: `verify_store(store: Path) -> list[str]`
 
 - [ ] **Step 1: Write failing immutability tests**
 
 ```python
-def test_import_rejects_duplicate_artifact_as_new_observation(tmp_path):
+def test_import_rejects_duplicate_artifact_without_attestation(tmp_path):
     first = import_run(ROW_A, SOURCE, META, tmp_path)
     with pytest.raises(ContractError, match=first.artifact_hash):
         import_run(ROW_B, SOURCE, META, tmp_path)
+
+def test_attested_duplicate_imports_and_is_flagged(tmp_path):
+    import_run(ROW_A, SOURCE, META, tmp_path)
+    record = import_run(ROW_B, SOURCE, META, tmp_path, duplicate_attestation=ATTESTATION)
+    assert record.duplicate_of == ROW_A.run_id
+    assert record.attestation.reviewer_ids == ATTESTATION.reviewer_ids
 
 def test_verify_store_detects_changed_file(tmp_path):
     record = import_run(ROW_A, SOURCE, META, tmp_path)
@@ -344,7 +363,7 @@ Expected: missing-module failure.
 
 - [ ] **Step 3: Implement canonical hashing and copy-on-import**
 
-Hash normalized relative paths plus file bytes. Reject symlinks, path escapes, duplicate run IDs, and duplicate artifact hashes. Write manifest last with atomic rename. Never modify imported artifacts.
+Hash normalized relative paths plus file bytes. Reject symlinks, path escapes, and duplicate run IDs. Reject duplicate artifact hashes by default; identical independent solutions are plausible on small tasks, so accept a duplicate only with a `DuplicateAttestation` (two reviewer IDs, session evidence paths, rationale) recorded in the run manifest and flagged `duplicate_of` for the analysis report. Write manifest last with atomic rename. Never modify imported artifacts.
 
 - [ ] **Step 4: Run tests and commit**
 
@@ -427,6 +446,10 @@ git commit -m "feat: evaluate submissions in locked containers"
 - Produces: `parse_mutation_results(path: Path) -> MutationResult`
 - Produces: `mutation_score(result: MutationResult, exclude_equivalent: bool = False) -> float`
 
+- [ ] **Step 0: Verify mutmut 3.6.0 export capability (spike)**
+
+Before pinning the protocol, confirm mutmut `3.6.0` can produce per-mutant ID, location, diff, operator class, result, and duration. mutmut 3.x changed its cache and browse model versus 2.x and has no rich native JSON export; if fields are missing, write a small extraction wrapper that reads mutmut's result cache and emits the required JSON, and pin that wrapper's behavior with a fixture test. Record the chosen extraction path in `study/mutation-protocol.json`. If mutmut 3.6.0 cannot yield the required fields even via its cache, stop and revise the plan's mutation tooling before proceeding.
+
 - [ ] **Step 1: Write failing denominator tests**
 
 ```python
@@ -481,10 +504,9 @@ git commit -m "feat: pin mutation protocol and scoring"
 ```python
 def test_review_packet_excludes_condition_and_trace(tmp_path):
     packet = prepare_blind_review(RUN, tmp_path)
-    text = packet.manifest_path.read_text()
-    assert "condition_id" not in text
-    assert "prompt" not in text
-    assert "conversation" not in text
+    manifest = json.loads(packet.manifest_path.read_text())
+    assert collect_keys(manifest).isdisjoint({"condition_id", "variant_id", "prompt_text", "conversation_log"})
+    assert not any(packet.artifact_path.rglob("conversation*"))
 
 def test_low_reliability_requires_full_rescore():
     with pytest.raises(ContractError, match="full independent rescoring"):
@@ -520,18 +542,39 @@ git commit -m "feat: enforce blind review reliability"
 
 - Produces: `paired_effect(rows: list[AnalysisRow], baseline: str, treatment: str, seed: int) -> EffectEstimate`
 - Produces: `prompt_interaction(rows: list[AnalysisRow]) -> InteractionResult`
-- Produces: `confirmation_decision(effect: EffectEstimate, defects: RiskRatioEstimate, economics: EffectEstimate) -> Decision`
+- Produces: `confirmation_decision(effect: EffectEstimate, defects: RiskRatioEstimate, economics: EffectEstimate, censoring: CensoringReport, interaction: InteractionResult, completed_runs: int, required_runs: int) -> Decision`
 
 - [ ] **Step 1: Write failing decision tests**
 
 ```python
-def test_confirmation_requires_all_three_criteria():
+def test_confirmation_requires_all_seven_criteria():
     decision = confirmation_decision(
         effect=EffectEstimate(point=0.06, low=0.01, high=0.11),
         defects=RiskRatioEstimate(point=0.90, low=0.70, high=1.05),
         economics=EffectEstimate(point=100, low=10, high=190),
+        censoring=ACCEPTABLE_CENSORING,
+        interaction=NO_BLOCKING_INTERACTION,
+        completed_runs=144,
+        required_runs=144,
     )
     assert decision.adopt is True
+
+def test_blocking_prompt_interaction_forces_rejection():
+    decision = confirmation_decision(
+        effect=STRONG_EFFECT, defects=SAFE_DEFECTS, economics=POSITIVE_ECONOMICS,
+        censoring=ACCEPTABLE_CENSORING, interaction=BLOCKING_INTERACTION,
+        completed_runs=144, required_runs=144,
+    )
+    assert decision.adopt is False
+    assert "prompt interaction" in decision.reasons[0]
+
+def test_underpowered_sample_forces_rejection():
+    decision = confirmation_decision(
+        effect=STRONG_EFFECT, defects=SAFE_DEFECTS, economics=POSITIVE_ECONOMICS,
+        censoring=ACCEPTABLE_CENSORING, interaction=NO_BLOCKING_INTERACTION,
+        completed_runs=120, required_runs=144,
+    )
+    assert decision.adopt is False
 
 def test_prompt_interaction_blocks_broad_claim():
     assert prompt_interaction(PROMPT_SENSITIVE_ROWS).blocks_claim is True
@@ -606,11 +649,11 @@ Guide covers preregistration, task freezing, hidden evaluator separation, severi
 ```bash
 python3.12 -m pytest -q
 python3.12 -m pytest --cov=tdd_ablation --cov-branch --cov-report=term-missing
-python3.12 -m tdd_ablation.cli validate --study study
+python3.12 -m tdd_ablation.cli validate --study tests/fixtures/reference-study
 python3.12 -m tdd_ablation.cli verify-store --study tests/fixtures/reference-study
 ```
 
-Expected: all tests pass, branch coverage at least 90 percent, study validates, fixture store verifies, no warnings.
+Expected: all tests pass, branch coverage at least 90 percent, fixture study validates, fixture store verifies, no warnings. Real `study/` directory validates only after Task 14 completes manifests; do not gate this task on it.
 
 - [ ] **Step 6: Commit**
 
@@ -655,21 +698,20 @@ Run: `python3.12 -m pytest tests/test_study_portfolio.py -q`
 
 Expected: failure showing 12 missing task manifests.
 
-- [ ] **Step 3: Author public tasks and manifests**
+- [ ] **Step 3: Author public tasks and draft manifests**
 
-Each task targets 2 to 4 engineer-hours without agent assistance, exposes explicit public contract, avoids external services, uses pinned dependencies, and contains at least one state or boundary interaction not reducible to line coverage.
+Each task targets 2 to 4 engineer-hours without agent assistance, exposes explicit public contract, avoids external services, uses pinned dependencies, and contains at least one state or boundary interaction not reducible to line coverage. Draft manifests carry everything except the `hidden_tests` mapping, which Task 14 adds — do not run full `cli validate` yet; it requires `hidden_tests` and passes only after Task 14. `load_tasks` accepts a `draft=True` flag that defers hidden-test validation; the portfolio test uses it.
 
 - [ ] **Step 4: Conduct blind difficulty review**
 
-Three reviewers estimate effort and identify ambiguity without seeing process conditions or hidden tests. Revise tasks until every requirement has one interpretation and median effort stays within target band. Freeze task and public-spec hashes.
+Three reviewers estimate effort and identify ambiguity without seeing process conditions or hidden tests. Revise tasks until every requirement has one interpretation and median effort stays within target band. Freeze public-spec hashes only; manifest hashes freeze at the end of Task 14 once hidden evaluators exist.
 
-- [ ] **Step 5: Validate and commit**
+- [ ] **Step 5: Validate portfolio and commit**
 
 ```bash
 python3.12 -m pytest tests/test_study_portfolio.py -q
-python3.12 -m tdd_ablation.cli validate --study study
 git add study/tasks study/public study/task-portfolio-review.md tests/test_study_portfolio.py
-git commit -m "study: freeze screening task portfolio"
+git commit -m "study: freeze public screening specs"
 ```
 
 ### Task 14: Build Hidden Evaluators and Seeded Defects
@@ -707,13 +749,21 @@ Expected: failure because hidden evaluators do not exist.
 
 Cover nominal behavior, malformed input, boundary values, cross-operation state, and specified failure semantics. Include critical or high cases only where business-impact rubric warrants them. Run evaluator against reference implementation and deliberately broken implementations.
 
-- [ ] **Step 4: Calibrate severity**
+- [ ] **Step 4: Complete task manifests with hidden-test mappings**
+
+Add the `hidden_tests` mapping (node ID, business behavior, severity) to each draft manifest from Task 13. Public-spec hashes frozen in Task 13 must not change; only manifest fields describing hidden evaluators may be added.
+
+- [ ] **Step 5: Calibrate severity**
 
 Two domain reviewers independently score 10 seeded defects. Require weighted kappa at least `0.80`; adjudicate, freeze labels, and record all changes. If threshold fails, revise rubric and repeat full calibration before proceeding.
 
-- [ ] **Step 5: Freeze and commit hidden evaluator hashes**
+- [ ] **Step 6: Validate, freeze, and commit manifest and evaluator hashes**
 
-Commit only encrypted hidden package or access-controlled submodule pointer when coding agents can access repository. Commit hashes, catalog, and calibration evidence in main study repository.
+```bash
+python3.12 -m tdd_ablation.cli validate --study study
+```
+
+Freeze manifest hashes now. Commit only encrypted hidden package or access-controlled submodule pointer when coding agents can access repository. Commit hashes, catalog, and calibration evidence in main study repository.
 
 ### Task 15: Freeze Pre-registration, Prompts, and Power
 
@@ -731,7 +781,7 @@ Commit only encrypted hidden package or access-controlled submodule pointer when
 
 - [ ] **Step 1: Complete hypothesis registry**
 
-For each hypothesis, record matched conditions, primary outcome, direction, minimum useful effect, alpha, power, cluster assumptions, attrition, analysis model, multiplicity treatment, and confirmation rule.
+For each hypothesis, record matched conditions, primary outcome, direction, minimum useful effect, alpha, power, cluster assumptions, attrition, analysis model, multiplicity treatment, and confirmation rule. Also record the screening and confirmation schedule seeds — Task 17 and Task 18 must read seeds from the pre-registration, not invent them at run time.
 
 - [ ] **Step 2: Review prompt equivalence**
 
@@ -741,7 +791,7 @@ Two reviewers compare three variants within each condition against obligation an
 
 Run: `python3.12 -m tdd_ablation.cli validate --study study`
 
-Store executable inputs and outputs. Final count equals larger of protocol minimum and calculated requirement.
+Store executable inputs and outputs. Final count equals larger of protocol minimum and calculated requirement. Record the resulting per-cell repetition count in `study/power-analysis.json`; the `schedule` CLI command reads it and passes it as the `repetitions` argument.
 
 - [ ] **Step 4: Freeze hashes and commit**
 
@@ -767,7 +817,7 @@ No changes after this commit except versioned protocol deviation approved before
 
 - [ ] **Step 1: Generate balanced pilot schedule**
 
-Use at least three tasks spanning difficulty bands and two runs per condition. Mark every pilot row `excluded_from_analysis=true`.
+Use at least four tasks spanning difficulty bands and three runs per task-condition cell, giving at least 12 runs per condition — the floor `shared_token_ceiling` enforces. Mark every pilot row `excluded_from_analysis=true`.
 
 - [ ] **Step 2: Execute pilot in randomized order**
 
@@ -802,10 +852,10 @@ git commit -m "study: freeze shared execution budget"
 - [ ] **Step 1: Generate schedule and verify balance**
 
 ```bash
-python3.12 -m tdd_ablation.cli schedule --phase screening --seed 20260812 --study study --output study/screening/schedule.csv
+python3.12 -m tdd_ablation.cli schedule --phase screening --study study --output study/screening/schedule.csv
 ```
 
-Require exact count from final power analysis, with equal variant allocation.
+Seed and repetition count come from `study/preregistration.json` and `study/power-analysis.json`; the command rejects ad-hoc seed overrides once the protocol is frozen. Require exact count from final power analysis, with equal variant allocation.
 
 - [ ] **Step 2: Run coding sessions manually in scheduled order**
 
@@ -879,9 +929,10 @@ Require identical tree hashes. Publish deviations, null findings, failed hypothe
 - [ ] Reference report hashes match across repeated runs.
 - [ ] Imported artifact mutation causes store verification failure.
 - [ ] Eight conditions and 24 prompt variants validate.
-- [ ] Screening schedule contains exactly 576 balanced rows.
-- [ ] Confirmation schedule contains 12 repetitions per task-condition cell and four per prompt variant.
+- [ ] Screening schedule row count matches frozen power analysis (minimum 576) with balanced cells and variants.
+- [ ] Confirmation schedule matches frozen power analysis (minimum 12 repetitions per task-condition cell, four per prompt variant).
 - [ ] Primary analysis retains censored runs and all generated mutants.
+- [ ] Duplicate artifact imports without attestation fail; attested duplicates carry `duplicate_of` and reviewer evidence.
 - [ ] Low severity agreement or design-review agreement blocks study progression.
 - [ ] Prompt interaction, censoring, sample-size, quality, safety, or economic failure blocks adoption claim.
 - [ ] No agent runner, hosted UI, or provider-specific orchestration shipped.
