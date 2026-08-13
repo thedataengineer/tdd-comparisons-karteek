@@ -1,0 +1,106 @@
+{
+  "hypotheses": [
+    {
+      "id": "H1",
+      "claim": "Requiring tests raises hidden-test pass rate",
+      "baseline_condition": "1",
+      "treatment_condition": "2",
+      "primary_metric": "severity_weighted_score",
+      "direction": "greater",
+      "minimum_useful_effect": 0.05,
+      "alpha": 0.05,
+      "power": 0.80,
+      "multiplicity_treatment": "holm-bonferroni"
+    },
+    {
+      "id": "H2",
+      "claim": "Writing tests first outperforms writing tests after implementation",
+      "baseline_condition": "3",
+      "treatment_condition": "4",
+      "primary_metric": "severity_weighted_score",
+      "direction": "greater",
+      "minimum_useful_effect": 0.05,
+      "alpha": 0.05,
+      "power": 0.80,
+      "multiplicity_treatment": "holm-bonferroni"
+    },
+    {
+      "id": "H3",
+      "claim": "Incremental red-green cycles outperform batched test-first work",
+      "baseline_condition": "4",
+      "treatment_condition": "5",
+      "primary_metric": "severity_weighted_score",
+      "direction": "greater",
+      "minimum_useful_effect": 0.05,
+      "alpha": 0.05,
+      "power": 0.80,
+      "multiplicity_treatment": "holm-bonferroni"
+    },
+    {
+      "id": "H4",
+      "claim": "Mandatory refactoring checkpoints reduce design defects",
+      "baseline_condition": "5",
+      "treatment_condition": "6b",
+      "primary_metric": "severity_weighted_score",
+      "direction": "greater",
+      "minimum_useful_effect": 0.05,
+      "alpha": 0.05,
+      "power": 0.80,
+      "multiplicity_treatment": "holm-bonferroni"
+    },
+    {
+      "id": "H5",
+      "claim": "Upfront contract design reduces interface and error-model defects",
+      "baseline_condition": "5",
+      "treatment_condition": "6a",
+      "primary_metric": "severity_weighted_score",
+      "direction": "greater",
+      "minimum_useful_effect": 0.05,
+      "alpha": 0.05,
+      "power": 0.80,
+      "multiplicity_treatment": "holm-bonferroni"
+    },
+    {
+      "id": "H6",
+      "claim": "Line coverage predicts hidden correctness",
+      "baseline_condition": "1",
+      "treatment_condition": "2",
+      "primary_metric": "line_coverage_correlation",
+      "direction": "greater",
+      "minimum_useful_effect": 0.05,
+      "alpha": 0.05,
+      "power": 0.80,
+      "multiplicity_treatment": "holm-bonferroni"
+    },
+    {
+      "id": "H7",
+      "claim": "Mutation score predicts hidden correctness better than line coverage",
+      "baseline_condition": "1",
+      "treatment_condition": "2",
+      "primary_metric": "mutation_score_correlation",
+      "direction": "greater",
+      "minimum_useful_effect": 0.05,
+      "alpha": 0.05,
+      "power": 0.80,
+      "multiplicity_treatment": "holm-bonferroni"
+    },
+    {
+      "id": "H8",
+      "claim": "Quality gains offset added tokens, elapsed time, and review effort",
+      "baseline_condition": "5",
+      "treatment_condition": "6c",
+      "primary_metric": "expected_net_economic_value",
+      "direction": "greater",
+      "minimum_useful_effect": 0.05,
+      "alpha": 0.05,
+      "power": 0.80,
+      "multiplicity_treatment": "holm-bonferroni"
+    }
+  ],
+  "confirmation_success": {
+    "min_effect_point": 0.05,
+    "min_effect_ci_low": 0.0,
+    "max_severe_defect_rr_ci_high": 1.10,
+    "min_economic_value_ci_low": 0.0
+  }
+}
