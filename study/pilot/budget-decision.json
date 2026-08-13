@@ -1,0 +1,16 @@
+{
+  "token_ceiling": 74400,
+  "timeout_seconds": 756,
+  "provider_limit": 200000,
+  "runtime_cap_seconds": 7200,
+  "samples_per_condition": {
+    "1": 12,
+    "2": 12,
+    "3": 12,
+    "4": 12,
+    "5": 12,
+    "6a": 12,
+    "6b": 12,
+    "6c": 12
+  }
+}
