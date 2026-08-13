@@ -1,0 +1,13 @@
+{
+  "effect": 0.05,
+  "standard_deviation": 0.1,
+  "alpha": 0.05,
+  "power": 0.8,
+  "design_effect": 1.2,
+  "attrition": 0.05,
+  "required_per_condition_arm": 80,
+  "task_count": 12,
+  "per_cell_raw": 6.666666666666667,
+  "allocated_per_cell": 9,
+  "total_screening_runs": 864
+}
