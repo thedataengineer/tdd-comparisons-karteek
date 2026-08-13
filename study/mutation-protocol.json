@@ -1,0 +1,9 @@
+{
+  "python_version": "3.12.5",
+  "mutmut_version": "3.6.0",
+  "operator_set": "full_unfiltered",
+  "timeout_multiplier": 2.0,
+  "extraction_method": "mutants_meta_json",
+  "coverage_filtering": false,
+  "type_check_filtering": false
+}
