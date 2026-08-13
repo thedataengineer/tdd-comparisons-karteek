@@ -1,0 +1,388 @@
+{
+  "conditions": [
+    {
+      "id": "1",
+      "name": "Task only",
+      "variants": [
+        {
+          "id": "v1",
+          "text": "Solve the task according to the public specification. Ensure all public requirements are met and tests run cleanly.",
+          "hash": "3301c5fe635b8e30f2a12b00515f98912c259e304adb7761eb25fdcdfc43512f",
+          "obligations": [
+            "Condition 1 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v2",
+          "text": "Please meet all requirements in the public specification. Solve the task according to the public specification. Verify that the final result is fully functional.",
+          "hash": "4a47d54cc26f118ad668e5100d2e6a71155d8bc03763ffb48b85e7cb0ec5a175",
+          "obligations": [
+            "Condition 1 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v3",
+          "text": "Your goal is to fulfill the public specification completely. Solve the task according to the public specification. Make sure tests execute without errors upon completion.",
+          "hash": "931e9d6d36240e12f459ce1ebfeb18349a548a09eb1fbfc4b7d8e3e61fbc0af1",
+          "obligations": [
+            "Condition 1 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Tests required, timing unspecified",
+      "variants": [
+        {
+          "id": "v1",
+          "text": "Solve the task according to the public specification. Include unit tests for your implementation. Ensure all public requirements are met and tests run cleanly.",
+          "hash": "38fc67d3420a374a157eb007b6496544c923b5dfa6326bed10ee5fed21b2d1eb",
+          "obligations": [
+            "Condition 2 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v2",
+          "text": "Please meet all requirements in the public specification. Solve the task according to the public specification. Include unit tests for your implementation. Verify that the final result is fully functional.",
+          "hash": "88b5a6d6449809f0d38109dd895c30b70dc958c2ca7113bf7dd8a22398449839",
+          "obligations": [
+            "Condition 2 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v3",
+          "text": "Your goal is to fulfill the public specification completely. Solve the task according to the public specification. Include unit tests for your implementation. Make sure tests execute without errors upon completion.",
+          "hash": "894f294fb84cde6591a19137f1c8e3f3a4191183e397d359ff424f8fef62843e",
+          "obligations": [
+            "Condition 2 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Tests written after implementation",
+      "variants": [
+        {
+          "id": "v1",
+          "text": "Solve the task according to the public specification. First write the implementation, then write unit tests for your code. Ensure all public requirements are met and tests run cleanly.",
+          "hash": "d65afc6b7ece44a7444320af0ab4eeccc8d0e64db4c49e8445be88513db47b51",
+          "obligations": [
+            "Condition 3 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v2",
+          "text": "Please meet all requirements in the public specification. Solve the task according to the public specification. First write the implementation, then write unit tests for your code. Verify that the final result is fully functional.",
+          "hash": "f74dbe748f4ce56d7b08cf9e4b6cd79853c05996eb057e06cd87a79a07c1e155",
+          "obligations": [
+            "Condition 3 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v3",
+          "text": "Your goal is to fulfill the public specification completely. Solve the task according to the public specification. First write the implementation, then write unit tests for your code. Make sure tests execute without errors upon completion.",
+          "hash": "aea8139118a3ff71e936ec0eb6e85085bf4bbddb23c9e646d6dc413fc0dc9163",
+          "obligations": [
+            "Condition 3 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Tests written first as batch",
+      "variants": [
+        {
+          "id": "v1",
+          "text": "Solve the task according to the public specification. First write all unit tests for the requirements as a batch, then write the implementation. Ensure all public requirements are met and tests run cleanly.",
+          "hash": "0a36dcbb90be625a05d2bb24d68987777eb945e8f1ed745243a620e1dcc75047",
+          "obligations": [
+            "Condition 4 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v2",
+          "text": "Please meet all requirements in the public specification. Solve the task according to the public specification. First write all unit tests for the requirements as a batch, then write the implementation. Verify that the final result is fully functional.",
+          "hash": "988a1122f7893a850fa4e0064e5fd40aa8f81318ff93a0bbf350ac7717b3d053",
+          "obligations": [
+            "Condition 4 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v3",
+          "text": "Your goal is to fulfill the public specification completely. Solve the task according to the public specification. First write all unit tests for the requirements as a batch, then write the implementation. Make sure tests execute without errors upon completion.",
+          "hash": "e31904e3605c9c119cda54e9b724bd648e347b1c9bc7fbc3de0f92781b15d42a",
+          "obligations": [
+            "Condition 4 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "name": "Incremental red-green cycles",
+      "variants": [
+        {
+          "id": "v1",
+          "text": "Solve the task according to the public specification. Work incrementally: write one unit test, verify it fails, write code to pass it, and repeat for each requirement. Ensure all public requirements are met and tests run cleanly.",
+          "hash": "edd8065ffb6b2930fa1300ff0bea1b8f5488ece430e83de5d766985621ae7415",
+          "obligations": [
+            "Condition 5 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v2",
+          "text": "Please meet all requirements in the public specification. Solve the task according to the public specification. Work incrementally: write one unit test, verify it fails, write code to pass it, and repeat for each requirement. Verify that the final result is fully functional.",
+          "hash": "5889e3f5b97a29210b4f9b34a6a6b929446f39e5c465edd7eaf62421b1028410",
+          "obligations": [
+            "Condition 5 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v3",
+          "text": "Your goal is to fulfill the public specification completely. Solve the task according to the public specification. Work incrementally: write one unit test, verify it fails, write code to pass it, and repeat for each requirement. Make sure tests execute without errors upon completion.",
+          "hash": "ae151ba77accc13d9b9844a0eb9cac02e9b6a242dbcf69820087e4a676e30772",
+          "obligations": [
+            "Condition 5 obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6a",
+      "name": "Incremental red-green cycles with upfront contract design",
+      "variants": [
+        {
+          "id": "v1",
+          "text": "Solve the task according to the public specification. First define public types and contract interfaces. Then work incrementally: write one test, verify failure, write code to pass. Ensure all public requirements are met and tests run cleanly.",
+          "hash": "2cb173db4015510eb35f89f172f5db480569b313a368d92985d90d7d460eb8f9",
+          "obligations": [
+            "Condition 6a obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v2",
+          "text": "Please meet all requirements in the public specification. Solve the task according to the public specification. First define public types and contract interfaces. Then work incrementally: write one test, verify failure, write code to pass. Verify that the final result is fully functional.",
+          "hash": "d462e364cf31090c1f01dc80c51133bda432c1620612edbd273bd021196a0fea",
+          "obligations": [
+            "Condition 6a obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v3",
+          "text": "Your goal is to fulfill the public specification completely. Solve the task according to the public specification. First define public types and contract interfaces. Then work incrementally: write one test, verify failure, write code to pass. Make sure tests execute without errors upon completion.",
+          "hash": "6aa17897f90d93089a33baf26daa250cef970d9021239c4cb23dc689fafa0bef",
+          "obligations": [
+            "Condition 6a obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6b",
+      "name": "Incremental red-green cycles with mandatory refactoring checkpoints",
+      "variants": [
+        {
+          "id": "v1",
+          "text": "Solve the task according to the public specification. Work incrementally: test, verify failure, make pass, then execute a refactoring checkpoint after each passing test cycle. Ensure all public requirements are met and tests run cleanly.",
+          "hash": "92dbc9d8de7860f4ad9ebaaedf0614d758cfe1493562d56ed93f26383e938946",
+          "obligations": [
+            "Condition 6b obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v2",
+          "text": "Please meet all requirements in the public specification. Solve the task according to the public specification. Work incrementally: test, verify failure, make pass, then execute a refactoring checkpoint after each passing test cycle. Verify that the final result is fully functional.",
+          "hash": "8add7e20444372a141e3df1bc14a5282cfb30b152cd45ef0a3e606e951e441ab",
+          "obligations": [
+            "Condition 6b obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v3",
+          "text": "Your goal is to fulfill the public specification completely. Solve the task according to the public specification. Work incrementally: test, verify failure, make pass, then execute a refactoring checkpoint after each passing test cycle. Make sure tests execute without errors upon completion.",
+          "hash": "3b1054361316ce5f9ef8d63c3bc4a4f73e240e44302b0b0cd031556e290125e8",
+          "obligations": [
+            "Condition 6b obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6c",
+      "name": "Incremental red-green cycles with upfront contract design and mandatory refactoring checkpoints",
+      "variants": [
+        {
+          "id": "v1",
+          "text": "Solve the task according to the public specification. First define contract interfaces. Then work incrementally: test, verify failure, make pass, and refactor after each requirement. Ensure all public requirements are met and tests run cleanly.",
+          "hash": "68ea5f0dd02144779e24746a08b0396b62229ba238f667d3855239babd286eeb",
+          "obligations": [
+            "Condition 6c obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v2",
+          "text": "Please meet all requirements in the public specification. Solve the task according to the public specification. First define contract interfaces. Then work incrementally: test, verify failure, make pass, and refactor after each requirement. Verify that the final result is fully functional.",
+          "hash": "bf66b2be5780cc64163bbfe4b800e153a23387eb94c25b816b34431f320b9803",
+          "obligations": [
+            "Condition 6c obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        },
+        {
+          "id": "v3",
+          "text": "Your goal is to fulfill the public specification completely. Solve the task according to the public specification. First define contract interfaces. Then work incrementally: test, verify failure, make pass, and refactor after each requirement. Make sure tests execute without errors upon completion.",
+          "hash": "36e432222c3e249dad53000fc738fc556ece5e5a0d0be500994d5f5984e2c43d",
+          "obligations": [
+            "Condition 6c obligation: follow process rules"
+          ],
+          "prohibitions": [
+            "Do not access hidden evaluators or external network"
+          ],
+          "completion_criteria": [
+            "Implementation passes public requirements"
+          ]
+        }
+      ]
+    }
+  ]
+}
