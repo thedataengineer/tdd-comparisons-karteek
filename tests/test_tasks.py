@@ -1,4 +1,4 @@
-"""Task manifests and severity calibration reliability tests (RED phase)."""
+"""Task manifests and severity calibration reliability tests."""
 
 from pathlib import Path
 
@@ -12,24 +12,19 @@ from tdd_ablation.reliability import (
 from tdd_ablation.tasks import validate_task_manifest
 
 
-# --- reliability tests ---
-
 def test_weighted_kappa_perfect_agreement():
-    """Perfect agreement gives kappa = 1.0."""
     left = [0, 1, 2, 3, 0, 1, 2, 3]
     right = [0, 1, 2, 3, 0, 1, 2, 3]
     assert weighted_kappa(left, right) == pytest.approx(1.0)
 
 
 def test_weighted_kappa_disagreement():
-    """Disagreement reduces kappa."""
     left = [0, 0, 0, 0, 3, 3, 3, 3]
     right = [3, 3, 3, 3, 0, 0, 0, 0]
     assert weighted_kappa(left, right) < 0.0
 
 
 def test_severity_calibration_requires_point_eight_agreement():
-    """Weighted kappa < 0.80 raises ContractError."""
     ratings = {
         "reviewer_a": [0, 1, 2, 3, 0, 1, 2, 3, 0, 1],
         "reviewer_b": [3, 2, 1, 0, 3, 2, 1, 0, 3, 2],
@@ -39,7 +34,6 @@ def test_severity_calibration_requires_point_eight_agreement():
 
 
 def test_severity_calibration_passes_high_agreement():
-    """Kappa >= 0.80 passes and returns kappa value."""
     ratings = {
         "reviewer_a": [0, 1, 2, 3, 0, 1, 2, 3, 0, 1],
         "reviewer_b": [0, 1, 2, 3, 0, 1, 2, 3, 0, 1],
@@ -48,10 +42,7 @@ def test_severity_calibration_passes_high_agreement():
     assert kappa >= 0.80
 
 
-# --- tasks tests ---
-
 def test_task_requires_frozen_hidden_test_mapping():
-    """Task manifest missing hidden_tests fails non-draft validation."""
     data = load_json(Path("study/tasks/task.example.json"))
     del data["hidden_tests"]
     with pytest.raises(ContractError, match="hidden_tests"):
@@ -59,7 +50,35 @@ def test_task_requires_frozen_hidden_test_mapping():
 
 
 def test_task_draft_manifest_allows_missing_hidden_tests():
-    """Draft task manifest allows missing hidden_tests when draft=True."""
     data = load_json(Path("study/tasks/task.example.json"))
     del data["hidden_tests"]
     validate_task_manifest(data, draft=True)
+
+
+def test_task_manifest_invalid_family():
+    data = load_json(Path("study/tasks/task.example.json"))
+    data["family"] = "invalid_family"
+    with pytest.raises(ContractError, match="invalid family"):
+        validate_task_manifest(data)
+
+
+def test_task_manifest_invalid_resource_limits():
+    data = load_json(Path("study/tasks/task.example.json"))
+    data["resource_limits"] = "not_a_dict"
+    with pytest.raises(ContractError, match="resource_limits must be a dict"):
+        validate_task_manifest(data)
+
+
+def test_task_manifest_invalid_hidden_tests():
+    data = load_json(Path("study/tasks/task.example.json"))
+    data["hidden_tests"] = {}
+    with pytest.raises(ContractError, match="cannot be empty"):
+        validate_task_manifest(data)
+
+    data["hidden_tests"] = {"test1": "not_a_dict"}
+    with pytest.raises(ContractError, match="must be a dict"):
+        validate_task_manifest(data)
+
+    data["hidden_tests"] = {"test1": {"business_behavior": "test", "severity": "invalid_severity"}}
+    with pytest.raises(ContractError, match="invalid severity"):
+        validate_task_manifest(data)

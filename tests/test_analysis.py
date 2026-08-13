@@ -1,4 +1,4 @@
-"""Effect estimates, Holm-Bonferroni correction, and confirmation decisions tests (RED phase)."""
+"""Effect estimates, Holm-Bonferroni correction, and confirmation decisions tests."""
 
 import pytest
 
@@ -15,6 +15,7 @@ from tdd_ablation.analysis import (
     prompt_interaction,
 )
 from tdd_ablation.budget import CensoringReport
+from tdd_ablation.contracts import ContractError
 
 STRONG_EFFECT = EffectEstimate(point=0.08, low=0.06, high=0.10)
 SAFE_DEFECTS = RiskRatioEstimate(point=0.85, low=0.70, high=1.05)
@@ -31,7 +32,6 @@ def test_cost_model_calculates_net_expected_value():
         defect_cost_by_severity={"low": 50, "medium": 200, "high": 1000, "critical": 5000},
         delay_cost_per_hour=100.0,
     )
-    # 5 avoided high defects (5000) - 100k tokens (0.30) - 30 min review (45.0) - 0.5 hr delay (50.0)
     net_val = cost_model.calculate_net_value(
         avoided_defects={"high": 5},
         tokens_used=100_000,
@@ -42,14 +42,39 @@ def test_cost_model_calculates_net_expected_value():
 
 
 def test_holm_bonferroni_adjust_controls_fwer():
+    assert holm_bonferroni_adjust([]) == []
+
     p_vals = [0.005, 0.01, 0.03, 0.04, 0.10, 0.20, 0.50, 0.80]
     results = holm_bonferroni_adjust(p_vals, alpha=0.05)
-    # Sorted order:
-    # k=1 (0.005 vs 0.05/8=0.00625) -> True
-    # k=2 (0.01 vs 0.05/7=0.00714) -> False -> all subsequent False
     assert results[0] is True
     assert results[1] is False
     assert sum(results) == 1
+
+
+def test_paired_effect_bootstrap_calculation():
+    rows = [
+        AnalysisRow(task_id="t1", condition_id="1", variant_id="v1", score=0.70, high_severity_defects=0),
+        AnalysisRow(task_id="t1", condition_id="2", variant_id="v1", score=0.85, high_severity_defects=0),
+        AnalysisRow(task_id="t2", condition_id="1", variant_id="v1", score=0.60, high_severity_defects=1),
+        AnalysisRow(task_id="t2", condition_id="2", variant_id="v1", score=0.75, high_severity_defects=0),
+    ]
+    eff = paired_effect(rows, baseline="1", treatment="2", seed=42, num_bootstraps=50)
+    assert eff.point == pytest.approx(0.15)
+    assert eff.low <= eff.point <= eff.high
+
+
+def test_paired_effect_missing_scores_raises_error():
+    rows = [
+        AnalysisRow(task_id="t1", condition_id="1", variant_id="v1", score=0.70, high_severity_defects=0),
+    ]
+    with pytest.raises(ContractError, match="missing scores"):
+        paired_effect(rows, baseline="1", treatment="2", seed=42)
+
+
+def test_prompt_interaction_structure():
+    rows = [AnalysisRow(task_id="t1", condition_id="1", variant_id="v1", score=0.70, high_severity_defects=0)]
+    res = prompt_interaction(rows)
+    assert res.blocks_claim is False
 
 
 def test_confirmation_requires_all_seven_criteria():
@@ -65,15 +90,20 @@ def test_confirmation_requires_all_seven_criteria():
     assert decision.adopt is True
 
 
-def test_blocking_prompt_interaction_forces_rejection():
+def test_confirmation_rejection_reasons():
+    weak_effect = EffectEstimate(point=0.03, low=-0.01, high=0.07)
+    bad_defects = RiskRatioEstimate(point=1.20, low=1.05, high=1.35)
+    bad_econ = EffectEstimate(point=-50.0, low=-100.0, high=10.0)
+    high_censoring = CensoringReport(total=144, censored=20, rate_by_condition={"5": 0.15}, requires_protocol_review=True)
+
     decision = confirmation_decision(
-        effect=STRONG_EFFECT,
-        defects=SAFE_DEFECTS,
-        economics=POSITIVE_ECONOMICS,
-        censoring=ACCEPTABLE_CENSORING,
+        effect=weak_effect,
+        defects=bad_defects,
+        economics=bad_econ,
+        censoring=high_censoring,
         interaction=BLOCKING_INTERACTION,
-        analyzed_runs=144,
+        analyzed_runs=100,
         required_runs=144,
     )
     assert decision.adopt is False
-    assert "prompt interaction" in decision.reasons[0]
+    assert len(decision.reasons) == 7
