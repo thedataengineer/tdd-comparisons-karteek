@@ -13,5 +13,23 @@
     "max_pids": 32,
     "timeout_seconds": 30,
     "network_enabled": false
+  },
+  "hidden_tests": {
+    "test_nominal_behavior": {
+      "business_behavior": "Executes basic functional capability for task-09",
+      "severity": "low"
+    },
+    "test_boundary_conditions": {
+      "business_behavior": "Handles boundary inputs for task-09",
+      "severity": "medium"
+    },
+    "test_error_resilience": {
+      "business_behavior": "Recovers from invalid input without crashing in task-09",
+      "severity": "high"
+    },
+    "test_security_safety": {
+      "business_behavior": "Enforces security and state corruption bounds in task-09",
+      "severity": "critical"
+    }
   }
 }

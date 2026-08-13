@@ -1,0 +1,44 @@
+{
+  "seeded_defects": [
+    {
+      "id": "defect-01",
+      "description": "Seeded defect 1"
+    },
+    {
+      "id": "defect-02",
+      "description": "Seeded defect 2"
+    },
+    {
+      "id": "defect-03",
+      "description": "Seeded defect 3"
+    },
+    {
+      "id": "defect-04",
+      "description": "Seeded defect 4"
+    },
+    {
+      "id": "defect-05",
+      "description": "Seeded defect 5"
+    },
+    {
+      "id": "defect-06",
+      "description": "Seeded defect 6"
+    },
+    {
+      "id": "defect-07",
+      "description": "Seeded defect 7"
+    },
+    {
+      "id": "defect-08",
+      "description": "Seeded defect 8"
+    },
+    {
+      "id": "defect-09",
+      "description": "Seeded defect 9"
+    },
+    {
+      "id": "defect-10",
+      "description": "Seeded defect 10"
+    }
+  ]
+}
