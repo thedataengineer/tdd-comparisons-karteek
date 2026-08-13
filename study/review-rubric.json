@@ -1,0 +1,18 @@
+{
+  "rubric_version": "1.0",
+  "min_acceptable_reliability": 0.70,
+  "dimensions": {
+    "correctness_and_boundaries": {
+      "weight": 0.40,
+      "levels": [0, 1, 2, 3]
+    },
+    "maintainability_and_clarity": {
+      "weight": 0.30,
+      "levels": [0, 1, 2, 3]
+    },
+    "error_handling": {
+      "weight": 0.30,
+      "levels": [0, 1, 2, 3]
+    }
+  }
+}

@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Sequence
 
 from tdd_ablation.contracts import ContractError
 
 SEVERITY_LEVELS = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+
+
+@dataclass(frozen=True)
+class ReliabilityResult:
+    metric: str
+    value: float
 
 
 def weighted_kappa(left: Sequence[int], right: Sequence[int], num_categories: int = 4) -> float:
@@ -19,21 +26,17 @@ def weighted_kappa(left: Sequence[int], right: Sequence[int], num_categories: in
     n = len(left)
     k = num_categories
 
-    # Observed matrix O
     o_matrix = [[0.0] * k for _ in range(k)]
     for r1, r2 in zip(left, right):
         if not (0 <= r1 < k) or not (0 <= r2 < k):
             raise ContractError(f"ratings must be integers in range [0, {k-1}]")
         o_matrix[r1][r2] += 1.0
 
-    # Marginals
     r_margin = [sum(o_matrix[i][j] for j in range(k)) for i in range(k)]
     c_margin = [sum(o_matrix[i][j] for i in range(k)) for j in range(k)]
 
-    # Expected matrix E
     e_matrix = [[(r_margin[i] * c_margin[j]) / n for j in range(k)] for i in range(k)]
 
-    # Quadratic weight matrix W: w_ij = (i - j)^2 / (k - 1)^2
     denom_weight = (k - 1) ** 2 if k > 1 else 1.0
     w_matrix = [[((i - j) ** 2) / denom_weight for j in range(k)] for i in range(k)]
 
@@ -48,10 +51,7 @@ def weighted_kappa(left: Sequence[int], right: Sequence[int], num_categories: in
 
 
 def validate_severity_calibration(ratings: dict[str, list[int]]) -> float:
-    """Validate severity calibration between two reviewers.
-
-    Requires weighted kappa >= 0.80.
-    """
+    """Validate severity calibration between two reviewers."""
     if len(ratings) != 2:
         raise ContractError(
             f"severity calibration must contain exactly two reviewers, found {len(ratings)}"
@@ -67,3 +67,12 @@ def validate_severity_calibration(ratings: dict[str, list[int]]) -> float:
         )
 
     return kappa
+
+
+def validate_review_panel(result: ReliabilityResult) -> None:
+    """Validate review panel reliability metric (kappa or alpha >= 0.70)."""
+    if result.value < 0.70:
+        raise ContractError(
+            f"review panel reliability below 0.70 threshold ({result.metric}={result.value:.3f}); "
+            f"requires full independent rescoring"
+        )
