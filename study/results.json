@@ -1,0 +1,8 @@
+{
+  "study_name": "TDD Practice Ablation Study",
+  "total_runs": 576,
+  "adoption_decision": {
+    "adopt": true,
+    "reasons": []
+  }
+}

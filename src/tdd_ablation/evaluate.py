@@ -21,6 +21,7 @@ SEVERITY_WEIGHTS = {
 class EvaluationRecord:
     passed_count: int
     failed_count: int
+    skipped_count: int
     total_count: int
     passed_weight: int
     failed_weight: int
@@ -42,6 +43,7 @@ def parse_junit(path: Path, severity_map: dict[str, str]) -> EvaluationRecord:
 
     passed_count = 0
     failed_count = 0
+    skipped_count = 0
     passed_weight = 0
     failed_weight = 0
     high_severity_defects = 0
@@ -57,6 +59,10 @@ def parse_junit(path: Path, severity_map: dict[str, str]) -> EvaluationRecord:
 
         severity = severity_map.get(key, severity_map.get(name, "low"))
         weight = SEVERITY_WEIGHTS.get(severity, 1)
+
+        if tc.find("skipped") is not None:
+            skipped_count += 1
+            continue
 
         is_failure = tc.find("failure") is not None or tc.find("error") is not None
 
@@ -76,6 +82,7 @@ def parse_junit(path: Path, severity_map: dict[str, str]) -> EvaluationRecord:
     return EvaluationRecord(
         passed_count=passed_count,
         failed_count=failed_count,
+        skipped_count=skipped_count,
         total_count=total_count,
         passed_weight=passed_weight,
         failed_weight=failed_weight,

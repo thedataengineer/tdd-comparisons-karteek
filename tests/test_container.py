@@ -72,3 +72,30 @@ def test_critical_failure_has_frozen_weight(tmp_path: Path):
     assert eval_rec.failed_weight == 8  # critical weight = 8
     assert eval_rec.total_weight == 9  # 1 (low) + 8 (critical)
     assert eval_rec.score == pytest.approx(1.0 / 9.0)
+
+
+def test_skipped_junit_case_is_unscored(tmp_path: Path):
+    junit_xml = """<testsuite>
+  <testcase name="pass" classname="suite"/>
+  <testcase name="fail" classname="suite"><failure/></testcase>
+  <testcase name="skip" classname="suite"><skipped/></testcase>
+</testsuite>
+"""
+    xml_path = tmp_path / "junit.xml"
+    xml_path.write_text(junit_xml, encoding="utf-8")
+
+    eval_rec = parse_junit(
+        xml_path,
+        {
+            "suite::pass": "low",
+            "suite::fail": "high",
+            "suite::skip": "critical",
+        },
+    )
+
+    assert eval_rec.passed_count == 1
+    assert eval_rec.failed_count == 1
+    assert eval_rec.skipped_count == 1
+    assert eval_rec.total_count == 2
+    assert eval_rec.total_weight == 5
+    assert eval_rec.score == pytest.approx(0.2)

@@ -71,10 +71,96 @@ def test_paired_effect_missing_scores_raises_error():
         paired_effect(rows, baseline="1", treatment="2", seed=42)
 
 
-def test_prompt_interaction_structure():
-    rows = [AnalysisRow(task_id="t1", condition_id="1", variant_id="v1", score=0.70, high_severity_defects=0)]
-    res = prompt_interaction(rows)
+def test_paired_effect_preserves_repeated_sampled_clusters():
+    rows = []
+    for task_id, treatment_score in enumerate([0.0, 0.0, 0.0, 0.0, 100.0], start=1):
+        rows.extend(
+            [
+                AnalysisRow(str(task_id), "baseline", "v1", 0.0, 0),
+                AnalysisRow(str(task_id), "treatment", "v1", treatment_score, 0),
+            ]
+        )
+
+    effect = paired_effect(
+        rows,
+        baseline="baseline",
+        treatment="treatment",
+        seed=7,
+        num_bootstraps=500,
+    )
+
+    assert effect.point == 20.0
+    assert effect.low == 0.0
+    assert effect.high == 60.0
+
+
+def test_paired_effect_rejects_task_missing_treatment_pair():
+    rows = [
+        AnalysisRow("complete", "baseline", "v1", 0.2, 0),
+        AnalysisRow("complete", "treatment", "v1", 0.4, 0),
+        AnalysisRow("incomplete", "baseline", "v1", 0.3, 0),
+    ]
+
+    with pytest.raises(ContractError, match="missing paired scores for task incomplete"):
+        paired_effect(rows, baseline="baseline", treatment="treatment", seed=7)
+
+
+def test_prompt_interaction_does_not_block_equal_variant_effects():
+    rows = []
+    for task_id in ["t1", "t2", "t3", "t4"]:
+        for variant_id in ["v1", "v2"]:
+            rows.extend(
+                [
+                    AnalysisRow(task_id, "baseline", variant_id, 0.5, 0),
+                    AnalysisRow(task_id, "treatment", variant_id, 0.7, 0),
+                ]
+            )
+
+    res = prompt_interaction(
+        rows,
+        baseline="baseline",
+        treatment="treatment",
+        seed=11,
+        num_permutations=499,
+    )
+
     assert res.blocks_claim is False
+    assert res.p_value == 1.0
+
+
+def test_prompt_interaction_blocks_opposing_variant_effects():
+    rows = []
+    for task_number in range(1, 9):
+        task_id = f"t{task_number}"
+        rows.extend(
+            [
+                AnalysisRow(task_id, "baseline", "v1", 0.0, 0),
+                AnalysisRow(task_id, "treatment", "v1", 1.0, 0),
+                AnalysisRow(task_id, "baseline", "v2", 1.0, 0),
+                AnalysisRow(task_id, "treatment", "v2", 0.0, 0),
+            ]
+        )
+
+    res = prompt_interaction(
+        rows,
+        baseline="baseline",
+        treatment="treatment",
+        seed=11,
+        num_permutations=999,
+    )
+
+    assert res.blocks_claim is True
+    assert res.p_value < 0.05
+
+
+def test_prompt_interaction_requires_two_paired_variants():
+    rows = [
+        AnalysisRow("t1", "baseline", "v1", 0.0, 0),
+        AnalysisRow("t1", "treatment", "v1", 1.0, 0),
+    ]
+
+    with pytest.raises(ContractError, match="at least two paired prompt variants"):
+        prompt_interaction(rows, baseline="baseline", treatment="treatment")
 
 
 def test_confirmation_requires_all_seven_criteria():

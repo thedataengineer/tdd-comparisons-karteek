@@ -103,20 +103,32 @@ def paired_effect(
     if not b_scores or not t_scores:
         raise ContractError(f"missing scores for baseline {baseline} or treatment {treatment}")
 
-    point_b = sum(b_scores) / len(b_scores)
-    point_t = sum(t_scores) / len(t_scores)
-    point_diff = point_t - point_b
+    task_ids = sorted(
+        {r.task_id for r in rows if r.condition_id in {baseline, treatment}}
+    )
+    task_effects: list[float] = []
+    for task_id in task_ids:
+        task_baseline = [
+            r.score for r in rows if r.task_id == task_id and r.condition_id == baseline
+        ]
+        task_treatment = [
+            r.score for r in rows if r.task_id == task_id and r.condition_id == treatment
+        ]
+        if not task_baseline or not task_treatment:
+            raise ContractError(f"missing paired scores for task {task_id}")
+        task_effects.append(
+            (sum(task_treatment) / len(task_treatment))
+            - (sum(task_baseline) / len(task_baseline))
+        )
+
+    point_diff = sum(task_effects) / len(task_effects)
 
     rng = random.Random(seed)
-    task_ids = sorted(list({r.task_id for r in rows}))
-    diffs = []
+    diffs: list[float] = []
 
     for _ in range(num_bootstraps):
-        sampled_tasks = [rng.choice(task_ids) for _ in task_ids]
-        b_sample = [r.score for r in rows if r.task_id in sampled_tasks and r.condition_id == baseline]
-        t_sample = [r.score for r in rows if r.task_id in sampled_tasks and r.condition_id == treatment]
-        if b_sample and t_sample:
-            diffs.append((sum(t_sample) / len(t_sample)) - (sum(b_sample) / len(b_sample)))
+        sampled_effects = [rng.choice(task_effects) for _ in task_effects]
+        diffs.append(sum(sampled_effects) / len(sampled_effects))
 
     if not diffs:
         return EffectEstimate(point=point_diff, low=point_diff, high=point_diff)
@@ -128,10 +140,64 @@ def paired_effect(
     return EffectEstimate(point=point_diff, low=diffs[low_idx], high=diffs[high_idx])
 
 
-def prompt_interaction(rows: list[AnalysisRow]) -> InteractionResult:
-    """Check prompt variant interaction."""
-    # Simplified interaction check returning structured result
-    return InteractionResult(blocks_claim=False, p_value=0.50)
+def prompt_interaction(
+    rows: list[AnalysisRow],
+    baseline: str,
+    treatment: str,
+    seed: int = 0,
+    alpha: float = 0.05,
+    num_permutations: int = 1000,
+) -> InteractionResult:
+    """Test whether treatment effect differs across prompt variants."""
+    if not 0.0 < alpha < 1.0:
+        raise ContractError("alpha must be between 0 and 1")
+    if num_permutations <= 0:
+        raise ContractError("num_permutations must be positive")
+
+    grouped: dict[str, dict[str, dict[str, list[float]]]] = {}
+    for row in rows:
+        if row.condition_id not in {baseline, treatment}:
+            continue
+        grouped.setdefault(row.variant_id, {}).setdefault(row.task_id, {}).setdefault(
+            row.condition_id, []
+        ).append(row.score)
+
+    variant_effects: dict[str, list[float]] = {}
+    for variant_id, tasks in grouped.items():
+        effects: list[float] = []
+        for task_id, conditions in tasks.items():
+            baseline_scores = conditions.get(baseline, [])
+            treatment_scores = conditions.get(treatment, [])
+            if not baseline_scores or not treatment_scores:
+                raise ContractError(
+                    f"missing paired scores for task {task_id}, variant {variant_id}"
+                )
+            effects.append(
+                (sum(treatment_scores) / len(treatment_scores))
+                - (sum(baseline_scores) / len(baseline_scores))
+            )
+        if effects:
+            variant_effects[variant_id] = effects
+
+    if len(variant_effects) < 2:
+        raise ContractError("prompt interaction requires at least two paired prompt variants")
+
+    observed_means = [sum(effects) / len(effects) for effects in variant_effects.values()]
+    observed_spread = max(observed_means) - min(observed_means)
+
+    rng = random.Random(seed)
+    extreme_count = 0
+    for _ in range(num_permutations):
+        permuted_means = []
+        for effects in variant_effects.values():
+            permuted = [effect if rng.randrange(2) else -effect for effect in effects]
+            permuted_means.append(sum(permuted) / len(permuted))
+        permuted_spread = max(permuted_means) - min(permuted_means)
+        if permuted_spread >= observed_spread - 1e-12:
+            extreme_count += 1
+
+    p_value = (extreme_count + 1) / (num_permutations + 1)
+    return InteractionResult(blocks_claim=p_value < alpha, p_value=p_value)
 
 
 def confirmation_decision(
