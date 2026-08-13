@@ -1,0 +1,17 @@
+{
+  "total_screening_runs": 576,
+  "completed_runs": 576,
+  "censored_runs": 0,
+  "censoring_rate": 0.0,
+  "store_integrity_verified": true,
+  "promoted_comparisons": [
+    {
+      "baseline": "1",
+      "treatment": "2"
+    },
+    {
+      "baseline": "5",
+      "treatment": "6c"
+    }
+  ]
+}
