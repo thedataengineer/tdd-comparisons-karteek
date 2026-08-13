@@ -1,0 +1,31 @@
+{
+  "id": "task-01",
+  "family": "parsing",
+  "public_spec_path": "study/public/task-01.md",
+  "hidden_evaluator_path": "study/hidden/task-01",
+  "severity_rubric_version": "1.0",
+  "dependency_lock_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "python_version": "3.12.5",
+  "container_image_digest": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+  "resource_limits": {
+    "cpu_cores": 1.0,
+    "memory_mb": 512,
+    "max_pids": 32,
+    "timeout_seconds": 30,
+    "network_enabled": false
+  },
+  "hidden_tests": {
+    "test_parse_valid_input": {
+      "business_behavior": "Parses standard input syntax correctly",
+      "severity": "low"
+    },
+    "test_parse_malformed_header": {
+      "business_behavior": "Rejects malformed headers without crashing",
+      "severity": "medium"
+    },
+    "test_parse_security_boundary": {
+      "business_behavior": "Prevents buffer/recursion overflow on malicious payloads",
+      "severity": "critical"
+    }
+  }
+}
