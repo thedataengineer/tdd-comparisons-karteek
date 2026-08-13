@@ -1,0 +1,17 @@
+{
+  "id": "task-04",
+  "family": "state",
+  "public_spec_path": "study/public/task-04.md",
+  "hidden_evaluator_path": "study/hidden/task-04",
+  "severity_rubric_version": "1.0",
+  "dependency_lock_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "python_version": "3.12.5",
+  "container_image_digest": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+  "resource_limits": {
+    "cpu_cores": 1.0,
+    "memory_mb": 512,
+    "max_pids": 32,
+    "timeout_seconds": 30,
+    "network_enabled": false
+  }
+}
